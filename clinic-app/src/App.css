@@ -1,0 +1,95 @@
+.container{
+  max-width: 1266px;
+  background-color: white;
+  margin: auto;
+  max-height: 100vh;
+}
+.p10{
+  padding: 10px;
+}
+.p25{
+  padding: 20px;
+}
+.p50{
+  padding: 50px;
+}
+.p75{
+  padding: 75px;
+}
+.child-mar-15 > *{
+  margin: 15px;
+}
+::-webkit-scrollbar {
+  display: none;
+}
+.welcome-pic{
+  height: 25rem;
+}
+@media screen and (max-width:766px) {
+  .container{
+    max-width: 766px;
+    background-color: white;
+    margin: auto;
+  }
+  .welcome-pic{
+    display: none;
+  }
+  .page-heading{
+    font-size: 1rem;
+  }
+}
+
+.flex-horizon{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+.flex-horizon-btw{
+  display: flex;
+  justify-content: space-between;
+  /* align-items: center; */
+  /* height: 100vh; */
+}
+.flex-vertical{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.form-scroll{
+  overflow-y: scroll;
+  height:100vh;
+}
+.form-horizon{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.form-horizon-btw{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.form-horizon-start{
+  display: flex;
+  justify-content: start;
+  align-items: center;
+}
+.login-page{
+  padding: 50px 20px;
+}
+.patient-pic{
+  width:100px
+}
+.welcome-heading{
+  font-size: 2rem;
+}
+
+.page-heading{
+  font-size: 2rem;
+}
+.login-form{
+  padding: 20px;
+  height: max-content;
+}
