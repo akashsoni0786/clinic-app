@@ -9,7 +9,6 @@ export const Context = (props) => {
       try
       {
         let patients = await apicall.get("/patients");
-        console.log("data ",patients.data)
         setPatientList(patients.data);
       }
       catch(e){

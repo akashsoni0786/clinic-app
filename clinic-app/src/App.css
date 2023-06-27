@@ -2,7 +2,7 @@
   max-width: 1266px;
   background-color: white;
   margin: auto;
-  max-height: 100vh;
+  /* max-height: 120vh; */
 }
 .p10{
   padding: 10px;
@@ -38,7 +38,10 @@
     font-size: 1rem;
   }
 }
-
+.fallback-pic{
+  width: 50%;
+  /* height: 30vh; */
+}
 .flex-horizon{
   display: flex;
   justify-content: center;
