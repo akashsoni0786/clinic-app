@@ -9,8 +9,10 @@ import {
 } from "@shopify/polaris";
 import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { contxtname } from "../../../Context/appcontext";
 
 const Login = () => {
+  const contxt = React.useContext(contxtname);
   const [errorUserEmpty, setErrorUserEmpty] = useState(false);
   const [errorPasswordEmpty, setErrorPasswordEmpty] = useState(false);
   const [errorUserWrong, setErrorUserWrong] = useState(false);
@@ -40,6 +42,7 @@ const Login = () => {
         setErrorPasswordEmpty(true);
       } else {
         if (user === "admin" && pass === "password123") {
+          contxt.setLoggedIn({username:"admin",password:"password123",loggedin:true});
           navigate("/patientform");
         } else {
           if (user !== "admin") {
