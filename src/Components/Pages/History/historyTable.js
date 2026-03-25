@@ -8,9 +8,11 @@ import {
   Modal,
   LegacyStack,
   TextContainer,
+  Popover,
+  TextField,
 } from "@shopify/polaris";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { SearchMinor } from "@shopify/polaris-icons";
+import { SearchMinor, CalendarMinor } from "@shopify/polaris-icons";
 import { contxtname } from "../../../Context/appcontext";
 import { useNavigate } from "react-router-dom";
 
@@ -20,6 +22,8 @@ const HistoryTable = () => {
   const [delId, setDelId] = useState("");
   const [activeDel, setActiveDel] = useState(false);
   const [inputValue, setInputValue] = useState("");
+  const [dateFilter, setDateFilter] = useState("");
+  const [datePopoverActive, setDatePopoverActive] = useState(false);
   const navigate = useNavigate();
 
   // Fetch patients from IPC on mount
@@ -79,18 +83,19 @@ const HistoryTable = () => {
     [navigate]
   );
 
-  // Filter patients by name or id, then rebuild rows
+  // Filter patients by name/id and date, then rebuild rows
   useEffect(() => {
     const list = contxt.patientList ?? [];
-    const filtered = inputValue
-      ? list.filter(
-          (p) =>
-            p.name.toLowerCase().includes(inputValue.toLowerCase()) ||
-            p.id.includes(inputValue)
-        )
-      : list;
+    const filtered = list.filter((p) => {
+      const matchesSearch =
+        !inputValue ||
+        p.name.toLowerCase().includes(inputValue.toLowerCase()) ||
+        p.id.includes(inputValue);
+      const matchesDate = !dateFilter || p.date === dateFilter;
+      return matchesSearch && matchesDate;
+    });
     setRows(buildRows(filtered));
-  }, [contxt.patientList, inputValue, buildRows]);
+  }, [contxt.patientList, inputValue, dateFilter, buildRows]);
 
   // Autocomplete options: patient names matching search
   const options = useMemo(() => {
@@ -151,6 +156,43 @@ const HistoryTable = () => {
             onSelect={handleSearchSelect}
             textField={textField}
           />
+          <Popover
+            active={datePopoverActive}
+            activator={
+              <Button
+                onClick={() => setDatePopoverActive((v) => !v)}
+                icon={CalendarMinor}
+                pressed={!!dateFilter}
+              />
+            }
+            onClose={() => setDatePopoverActive(false)}
+          >
+            <div style={{ padding: "12px", minWidth: "200px" }}>
+              <TextField
+                label="Filter by date"
+                type="date"
+                value={dateFilter}
+                onChange={(val) => {
+                  setDateFilter(val);
+                  setDatePopoverActive(false);
+                }}
+              />
+              {dateFilter && (
+                <div style={{ marginTop: "8px" }}>
+                  <Button
+                    plain
+                    destructive
+                    onClick={() => {
+                      setDateFilter("");
+                      setDatePopoverActive(false);
+                    }}
+                  >
+                    Clear filter
+                  </Button>
+                </div>
+              )}
+            </div>
+          </Popover>
         </div>
       </div>
       <div className="p25">
