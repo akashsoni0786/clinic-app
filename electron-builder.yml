@@ -1,0 +1,27 @@
+appId: com.meditrack.app
+productName: MediTrack
+copyright: Copyright © 2026
+directories:
+  output: dist
+  buildResources: assets
+files:
+  - build/**/*
+  - electron/**/*
+  - package.json
+extraMetadata:
+  main: electron/main.js
+win:
+  signAndEditExecutable: false
+  target:
+    - target: nsis
+      arch: x64
+  icon: assets/icon.png
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+publish:
+  provider: github
+  owner: REPLACE_WITH_YOUR_GITHUB_USERNAME
+  repo: meditrack-releases
