@@ -15,7 +15,7 @@ const MedicineField = ({ label, value, onChange, error, helpText, data }) => {
     if (lastLine.length < 2) return [];
     const regex = new RegExp(lastLine, "i");
     return medicines.filter((m) => regex.test(m)).slice(0, 10);
-  }, [lastLine]);
+  }, [lastLine, medicines]);
 
   const handleSelect = (medicine) => {
     const lines = (value || "").split("\n");
