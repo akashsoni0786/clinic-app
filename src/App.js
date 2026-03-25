@@ -31,6 +31,10 @@ function App() {
 
   return (
     <div>
+      <div
+        className="watermark"
+        style={{ backgroundImage: `url(${process.env.PUBLIC_URL}/logo.png)` }}
+      />
       {contxt.loggedIn.loggedin ? (
         <Panel />
       ) : (

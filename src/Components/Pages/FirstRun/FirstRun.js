@@ -39,11 +39,12 @@ const FirstRun = ({ onComplete }) => {
   return (
     <div className="container">
       <div className="flex-vertical login-page">
-        <h1 className="welcome-heading">MediTrack — First Time Setup</h1>
-        <p style={{ textAlign: "center", marginBottom: "20px" }}>
-          Create your admin account to get started.
-        </p>
-        <div className="flex-horizon login-form">
+        <div className="login-brand">
+          <img src="logo.png" alt="MediTrack" className="login-brand-logo" />
+          <span className="login-brand-name">MediTrack</span>
+          <p className="welcome-heading">First time setup — create your admin account</p>
+        </div>
+        <div className="login-form">
           <Form onSubmit={handleSubmit}>
             <FormLayout>
               {error && <Banner status="critical">{error}</Banner>}
@@ -61,5 +62,6 @@ const FirstRun = ({ onComplete }) => {
     </div>
   );
 };
+
 
 export default FirstRun;

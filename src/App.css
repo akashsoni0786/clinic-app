@@ -1,98 +1,199 @@
-.container{
+/* ── Watermark (injected via React) ────────────────────── */
+.watermark {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 520px;
+  height: 520px;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  opacity: 0.05;
+  pointer-events: none;
+  z-index: 0;
+}
+
+#root {
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Brand Header ──────────────────────────────────────── */
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 20px;
+  background: #ffffff;
+  border-bottom: 1px solid #e1e3e5;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.07);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand-logo {
+  width: 38px;
+  height: 38px;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.brand-name {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #1a1a2e;
+  letter-spacing: 0.3px;
+}
+
+.header-user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  color: #6d7175;
+}
+
+.header-user strong {
+  color: #202223;
+}
+
+/* ── Container ─────────────────────────────────────────── */
+.container {
+  width: 100%;
   max-width: 1266px;
-  background-color: white;
+  background-color: rgba(255, 255, 255, 0.97);
   margin: auto;
-  /* max-height: 120vh; */
+  min-height: calc(100vh - 110px);
+  overflow-x: hidden;
 }
-.p10{
-  padding: 10px;
+
+/* ── Spacing ───────────────────────────────────────────── */
+.p10  { padding: 10px; }
+.p25  { padding: 20px; }
+.p50  { padding: 50px; }
+.p75  { padding: 75px; }
+
+.child-mar-15 { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+
+/* ── Scrollbar ─────────────────────────────────────────── */
+::-webkit-scrollbar { display: none; }
+
+/* ── Images ────────────────────────────────────────────── */
+.welcome-pic   { height: 22rem; opacity: 0.92; }
+.fallback-pic  { width: 50%; }
+.patient-pic   { width: 64px; height: 64px; object-fit: contain; }
+
+/* ── Page heading ──────────────────────────────────────── */
+.page-heading {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin-left: 12px;
 }
-.p25{
+
+/* ── Login / FirstRun ──────────────────────────────────── */
+.login-page {
+  padding: 30px 20px;
+  min-height: calc(100vh - 110px);
+}
+
+.login-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.login-brand-logo {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  border-radius: 18px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+}
+
+.login-brand-name {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #1a1a2e;
+  letter-spacing: 0.5px;
+}
+
+.welcome-heading {
+  font-size: 1.1rem;
+  color: #6d7175;
+  margin-bottom: 4px;
+  text-align: center;
+}
+
+.login-form {
   padding: 20px;
+  width: 100%;
+  max-width: 360px;
 }
-.p50{
-  padding: 50px;
-}
-.p75{
-  padding: 75px;
-}
-.child-mar-15 > *{
-  margin: 15px;
-}
-::-webkit-scrollbar {
-  display: none;
-}
-.welcome-pic{
-  height: 25rem;
-}
-@media screen and (max-width:766px) {
-  .container{
-    max-width: 766px;
-    background-color: white;
-    margin: auto;
-  }
-  .welcome-pic{
-    display: none;
-  }
-  .page-heading{
-    font-size: 1rem;
-  }
-}
-.fallback-pic{
-  width: 50%;
-  /* height: 30vh; */
-}
-.flex-horizon{
+
+/* ── Flex helpers ──────────────────────────────────────── */
+.flex-horizon {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
+  flex-wrap: wrap;
+  width: 100%;
 }
-.flex-horizon-btw{
+
+.flex-horizon-btw {
   display: flex;
   justify-content: space-between;
-  /* align-items: center; */
-  /* height: 100vh; */
+  align-items: center;
 }
-.flex-vertical{
+
+.flex-vertical {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
 }
-.form-scroll{
-  overflow-y: scroll;
-  height:100vh;
-}
-.form-horizon{
+
+.form-scroll { overflow-y: scroll; height: 100vh; }
+
+.form-horizon {
   display: flex;
   justify-content: center;
   align-items: center;
 }
-.form-horizon-btw{
+
+.form-horizon-btw {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
-.form-horizon-start{
+
+.form-horizon-start {
   display: flex;
   justify-content: start;
   align-items: center;
 }
-.login-page{
-  padding: 50px 20px;
-}
-.patient-pic{
-  width:100px
-}
-.welcome-heading{
-  font-size: 2rem;
+
+/* ── DataTable wrapper ─────────────────────────────────── */
+.table-wrapper {
+  width: 100%;
+  overflow-x: auto;
 }
 
-.page-heading{
-  font-size: 2rem;
-}
-.login-form{
-  padding: 20px;
-  height: max-content;
+/* ── Responsive ────────────────────────────────────────── */
+@media screen and (max-width: 766px) {
+  .container    { max-width: 100%; }
+  .welcome-pic  { display: none; }
+  .page-heading { font-size: 1rem; }
+  .brand-name   { font-size: 1rem; }
+  .p25          { padding: 12px; }
 }

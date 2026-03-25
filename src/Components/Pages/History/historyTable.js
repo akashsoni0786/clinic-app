@@ -195,7 +195,7 @@ const HistoryTable = () => {
           </Popover>
         </div>
       </div>
-      <div className="p25">
+      <div className="p25 table-wrapper">
         <>
           <Scrollable shadow style={{ height: "80vh" }}>
             <Card>

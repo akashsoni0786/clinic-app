@@ -66,13 +66,17 @@ function Panel() {
         </Banner>
       )}
       {updateAvailable && !updateReady && (
-        <Banner status="info">Naya update download ho raha hai...</Banner>
+        <Banner status="info">A new update is downloading…</Banner>
       )}
-      <div style={{ display: "flex", justifyContent: "flex-end", padding: "8px 16px", gap: "12px", alignItems: "center" }}>
-        <span style={{ fontSize: "14px" }}>
-          {contxt.loggedIn.name} ({contxt.loggedIn.role})
-        </span>
-        <Button size="slim" onClick={handleLogout}>Logout</Button>
+      <div className="app-header">
+        <div className="brand">
+          <img src="logo.png" alt="MediTrack" className="brand-logo" />
+          <span className="brand-name">MediTrack</span>
+        </div>
+        <div className="header-user">
+          <span><strong>{contxt.loggedIn.name}</strong> &nbsp;·&nbsp; {contxt.loggedIn.role}</span>
+          <Button size="slim" onClick={handleLogout}>Logout</Button>
+        </div>
       </div>
       <Tabs tabs={tabs} selected={selected} onSelect={handleTabChange}>
         <Routes>

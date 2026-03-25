@@ -41,32 +41,37 @@ const Login = () => {
   return (
     <div className="container">
       <div className="flex-vertical login-page">
-        <h1 className="welcome-heading">Welcome to MediTrack</h1>
-        <div className="flex-horizon login-form">
-          <img alt="welcome pic" src="welcome.png" className="welcome-pic" />
-          <Form onSubmit={handleSubmit}>
-            <FormLayout>
-              {error && <Banner status="critical">{error}</Banner>}
-              <TextField
-                requiredIndicator
-                value={username}
-                onChange={setUsername}
-                label="Username"
-                autoComplete="username"
-              />
-              <TextField
-                requiredIndicator
-                value={password}
-                onChange={setPassword}
-                label="Password"
-                type="password"
-                autoComplete="current-password"
-              />
-              <Button primary submit disabled={loading}>
-                {loading ? <Spinner accessibilityLabel="Logging in" size="small" /> : "Login"}
-              </Button>
-            </FormLayout>
-          </Form>
+        <div className="login-brand">
+          <img src="logo.png" alt="MediTrack" className="login-brand-logo" />
+          <span className="login-brand-name">MediTrack</span>
+          <p className="welcome-heading">Welcome back — please sign in</p>
+        </div>
+        <div className="flex-horizon" style={{ gap: "60px", alignItems: "flex-start", flexWrap: "wrap" }}>
+          <div className="login-form">
+            <Form onSubmit={handleSubmit}>
+              <FormLayout>
+                {error && <Banner status="critical">{error}</Banner>}
+                <TextField
+                  requiredIndicator
+                  value={username}
+                  onChange={setUsername}
+                  label="Username"
+                  autoComplete="username"
+                />
+                <TextField
+                  requiredIndicator
+                  value={password}
+                  onChange={setPassword}
+                  label="Password"
+                  type="password"
+                  autoComplete="current-password"
+                />
+                <Button primary submit disabled={loading} fullWidth>
+                  {loading ? <Spinner accessibilityLabel="Logging in" size="small" /> : "Login"}
+                </Button>
+              </FormLayout>
+            </Form>
+          </div>
         </div>
       </div>
     </div>
