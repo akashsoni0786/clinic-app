@@ -16,6 +16,8 @@ import React, { useEffect, useState } from "react";
 import { EditMinor, DeleteMinor } from "@shopify/polaris-icons";
 import { contxtname } from "../../../Context/appcontext";
 import { useLocation } from "react-router-dom";
+import MedicineField from "../../common/MedicineField";
+import homeopathySymptoms from "../../../data/homeopathySymptoms";
 
 const PatientDetails = () => {
   const contxt = React.useContext(contxtname);
@@ -311,26 +313,23 @@ const PatientDetails = () => {
                       </span>
                     }
                   />
-                  <TextField
+                  <MedicineField
                     label="Enter patient's symptoms"
                     error={editedDataError.symptomsErr}
                     value={editedData.symptoms}
                     onChange={handleSymptomsChange}
-                    type="text"
-                    multiline={5}
+                    data={homeopathySymptoms}
                     helpText={
                       <span style={{ color: "red" }}>
                         {editedDataError.symptoms}
                       </span>
                     }
                   />
-                  <TextField
+                  <MedicineField
                     label="Enter patient's medicines"
                     value={editedData.medicines}
                     error={editedDataError.medicinesErr}
                     onChange={handleMedicinesChange}
-                    type="text"
-                    multiline={5}
                     helpText={
                       <span style={{ color: "red" }}>
                         {editedDataError.medicines}
@@ -375,26 +374,23 @@ const PatientDetails = () => {
                       </span>
                     }
                   />
-                  <TextField
+                  <MedicineField
                     label="Enter patient's symptoms"
                     error={editedDataError.symptomsErr}
                     value={editedData.symptoms}
                     onChange={handleSymptomsChange}
-                    type="text"
-                    multiline={5}
+                    data={homeopathySymptoms}
                     helpText={
                       <span style={{ color: "red" }}>
                         {editedDataError.symptoms}
                       </span>
                     }
                   />
-                  <TextField
+                  <MedicineField
                     label="Enter patient's medicines"
                     value={editedData.medicines}
                     error={editedDataError.medicinesErr}
                     onChange={handleMedicinesChange}
-                    type="text"
-                    multiline={5}
                     helpText={
                       <span style={{ color: "red" }}>
                         {editedDataError.medicines}

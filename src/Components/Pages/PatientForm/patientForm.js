@@ -9,6 +9,8 @@ import {
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { contxtname } from "../../../Context/appcontext";
+import MedicineField from "../../common/MedicineField";
+import homeopathySymptoms from "../../../data/homeopathySymptoms";
 const PatientForm = () => {
   const contxt = React.useContext(contxtname);
   let date = new Date();
@@ -259,13 +261,12 @@ const PatientForm = () => {
                 <span style={{ color: "red" }}>{patientError.locationErr}</span>
               }
             />
-            <TextField
+            <MedicineField
               label="Enter patient's symptoms"
               error={patientError.symptoms}
               value={patient.symptoms}
               onChange={handleSymptomsChange}
-              type="text"
-              multiline={5}
+              data={homeopathySymptoms}
               helpText={
                 <span style={{ color: "red" }}>{patientError.symptomsErr}</span>
               }
@@ -280,13 +281,11 @@ const PatientForm = () => {
                 <span style={{ color: "red" }}>{patientError.deseaseErr}</span>
               }
             />
-            <TextField
+            <MedicineField
               label="Enter patient's medicines"
               value={patient.medicines}
               error={patientError.medicines}
               onChange={handleMedicinesChange}
-              type="text"
-              multiline={5}
               helpText={
                 <span style={{ color: "red" }}>
                   {patientError.medicinesErr}
