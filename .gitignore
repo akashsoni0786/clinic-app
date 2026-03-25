@@ -4,12 +4,15 @@
 /node_modules
 /.pnp
 .pnp.js
-
+/dist
 # testing
 /coverage
 
 # production
 /build
+
+# Electron build output
+/dist
 
 # misc
 .DS_Store
