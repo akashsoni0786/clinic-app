@@ -70,8 +70,8 @@ const PatientDetails = () => {
                     setEditIndex(originalIndex);
                     setEditedData({
                       date: data.todaydate,
-                      symptoms: symp,
-                      medicines: medi,
+                      symptoms: data.daysymptoms,
+                      medicines: data.daymedicines,
                     });
                   },
                 },
