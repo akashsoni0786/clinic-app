@@ -27,6 +27,29 @@ const PatientDetails = () => {
   const [activeEdit, setActiveEdit] = useState(false);
   const [activeDel, setActiveDel] = useState(false);
   const [activeAdd, setActiveAdd] = useState(false);
+  const [patientInfo, setPatientInfo] = useState({
+    name: location.state.rowdata.name,
+    contact_no: location.state.rowdata.contact_no,
+    location: location.state.rowdata.location,
+    gender: location.state.rowdata.gender,
+  });
+  const [activeEditDetails, setActiveEditDetails] = useState(false);
+  const [editedPatientDetails, setEditedPatientDetails] = useState({
+    name: "",
+    contact_no: "",
+    location: "",
+    gender: "",
+  });
+  const [editedPatientDetailsError, setEditedPatientDetailsError] = useState({
+    name: false,
+    nameErr: "",
+    contact_no: false,
+    contact_noErr: "",
+    location: false,
+    locationErr: "",
+    gender: false,
+    genderErr: "",
+  });
   const [editedData, setEditedData] = useState({
     date: "",
     symptoms: "",
@@ -111,6 +134,67 @@ const PatientDetails = () => {
       ...editedData,
       medicines: value,
     });
+  };
+  const handlePatientNameChange = (value) => {
+    setEditedPatientDetails({ ...editedPatientDetails, name: value });
+  };
+  const handlePatientContactChange = (value) => {
+    setEditedPatientDetails({ ...editedPatientDetails, contact_no: value });
+  };
+  const handlePatientLocationChange = (value) => {
+    setEditedPatientDetails({ ...editedPatientDetails, location: value });
+  };
+  const handlePatientGenderChange = (value) => {
+    setEditedPatientDetails({ ...editedPatientDetails, gender: value });
+  };
+  const onSubmitEditedPatientDetails = async () => {
+    let errors = {
+      name: false,
+      nameErr: "",
+      contact_no: false,
+      contact_noErr: "",
+      location: false,
+      locationErr: "",
+      gender: false,
+      genderErr: "",
+    };
+    Object.keys(editedPatientDetails).forEach((field) => {
+      if (editedPatientDetails[field] === "") {
+        errors = {
+          ...errors,
+          [field]: true,
+          [field + "Err"]: "Please enter here!",
+        };
+      }
+    });
+    const hasError = Object.keys(editedPatientDetails).some(
+      (field) => errors[field]
+    );
+    if (!hasError) {
+      try {
+        const token = contxt.loggedIn.token;
+        const updatedData = {
+          ...location.state.rowdata,
+          name: editedPatientDetails.name,
+          contact_no: editedPatientDetails.contact_no,
+          location: editedPatientDetails.location,
+          gender: editedPatientDetails.gender,
+        };
+        await window.api.invoke("patients:update", token, location.state.rowdata.id, updatedData);
+        const alldata = await window.api.invoke("patients:getAll", token);
+        contxt.setPatientList(alldata);
+        setPatientInfo({
+          name: editedPatientDetails.name,
+          contact_no: editedPatientDetails.contact_no,
+          location: editedPatientDetails.location,
+          gender: editedPatientDetails.gender,
+        });
+        setActiveEditDetails(false);
+      } catch (e) {
+        console.log(e);
+      }
+    }
+    setEditedPatientDetailsError(errors);
   };
   const onSubmitEditedData = async () => {
     let errors = {
@@ -239,7 +323,7 @@ const PatientDetails = () => {
       <div className="form-horizon-btw p25">
         <div className="form-horizon-start">
           <img alt="details pic" src="details.png" className="patient-pic" />
-          <h1 className="page-heading">{location.state.rowdata.name}</h1>
+          <h1 className="page-heading">{patientInfo.name}</h1>
         </div>
       </div>
       <Page fullWidth>
@@ -248,16 +332,41 @@ const PatientDetails = () => {
             <LegacyCard title="Patient Details" sectioned>
               <div className="flex-horizon-btw">
                 <div>
-                  <p>Mobile No.: {location.state.rowdata.contact_no}</p>
-                  <p>Location : {location.state.rowdata.location}</p>
-                  <p>Gender : {location.state.rowdata.gender}</p>
+                  <p>Mobile No.: {patientInfo.contact_no}</p>
+                  <p>Location : {patientInfo.location}</p>
+                  <p>Gender : {patientInfo.gender}</p>
                 </div>
-                <Button size="slim" onClick={() => {
-                  setEditedData({ date: new Date().toISOString().split("T")[0], symptoms: "", medicines: "" });
-                  setActiveAdd(true);
-                }}>
-                  Add New Details
-                </Button>
+                <div style={{ display: "flex", gap: "8px" }}>
+                  <Button
+                    size="slim"
+                    onClick={() => {
+                      setEditedPatientDetails({
+                        name: location.state.rowdata.name,
+                        contact_no: location.state.rowdata.contact_no,
+                        location: location.state.rowdata.location,
+                        gender: location.state.rowdata.gender,
+                      });
+                      setEditedPatientDetailsError({
+                        name: false, nameErr: "",
+                        contact_no: false, contact_noErr: "",
+                        location: false, locationErr: "",
+                        gender: false, genderErr: "",
+                      });
+                      setActiveEditDetails(true);
+                    }}
+                  >
+                    Edit Details
+                  </Button>
+                  <Button
+                    size="slim"
+                    onClick={() => {
+                      setEditedData({ date: new Date().toISOString().split("T")[0], symptoms: "", medicines: "" });
+                      setActiveAdd(true);
+                    }}
+                  >
+                    Add New Details
+                  </Button>
+                </div>
               </div>
             </LegacyCard>
           </Layout.Section>
@@ -426,6 +535,74 @@ const PatientDetails = () => {
                     Do you really want to delete this? Because this action
                     cannot be revert!
                   </p>
+                </TextContainer>
+              </LegacyStack.Item>
+            </LegacyStack>
+          </Modal.Section>
+        </Modal>
+      </div>
+      <div style={{ height: "500px" }}>
+        <Modal
+          open={activeEditDetails}
+          onClose={() => setActiveEditDetails(false)}
+          title="Edit Patient Details"
+          primaryAction={{
+            content: "Save",
+            onAction: () => onSubmitEditedPatientDetails(),
+          }}
+          secondaryActions={{
+            content: "Cancel",
+            onAction: () => setActiveEditDetails(false),
+          }}
+        >
+          <Modal.Section>
+            <LegacyStack vertical>
+              <LegacyStack.Item>
+                <TextContainer>
+                  <TextField
+                    label="Name"
+                    value={editedPatientDetails.name}
+                    error={editedPatientDetailsError.name}
+                    onChange={handlePatientNameChange}
+                    helpText={
+                      <span style={{ color: "red" }}>
+                        {editedPatientDetailsError.nameErr}
+                      </span>
+                    }
+                  />
+                  <TextField
+                    label="Mobile No."
+                    value={editedPatientDetails.contact_no}
+                    error={editedPatientDetailsError.contact_no}
+                    onChange={handlePatientContactChange}
+                    helpText={
+                      <span style={{ color: "red" }}>
+                        {editedPatientDetailsError.contact_noErr}
+                      </span>
+                    }
+                  />
+                  <TextField
+                    label="Location"
+                    value={editedPatientDetails.location}
+                    error={editedPatientDetailsError.location}
+                    onChange={handlePatientLocationChange}
+                    helpText={
+                      <span style={{ color: "red" }}>
+                        {editedPatientDetailsError.locationErr}
+                      </span>
+                    }
+                  />
+                  <TextField
+                    label="Gender"
+                    value={editedPatientDetails.gender}
+                    error={editedPatientDetailsError.gender}
+                    onChange={handlePatientGenderChange}
+                    helpText={
+                      <span style={{ color: "red" }}>
+                        {editedPatientDetailsError.genderErr}
+                      </span>
+                    }
+                  />
                 </TextContainer>
               </LegacyStack.Item>
             </LegacyStack>
