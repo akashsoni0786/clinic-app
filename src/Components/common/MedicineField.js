@@ -26,18 +26,8 @@ const MedicineField = ({ label, value, onChange, error, helpText, data }) => {
 
   return (
     <div>
-      <TextField
-        label={label}
-        value={value}
-        onChange={onChange}
-        type="text"
-        multiline={5}
-        error={error}
-        helpText={helpText}
-        autoComplete="off"
-      />
       {suggestions.length > 0 && (
-        <div style={{ marginTop: "6px" }}>
+        <div style={{ marginBottom: "6px" }}>
           <p style={{ fontSize: "12px", color: "#6d7175", marginBottom: "4px" }}>
             Suggestions:
           </p>
@@ -72,6 +62,16 @@ const MedicineField = ({ label, value, onChange, error, helpText, data }) => {
           </div>
         </div>
       )}
+      <TextField
+        label={label}
+        value={value}
+        onChange={onChange}
+        type="text"
+        multiline={5}
+        error={error}
+        helpText={helpText}
+        autoComplete="off"
+      />
     </div>
   );
 };
