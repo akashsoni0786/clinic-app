@@ -28,16 +28,20 @@ const HistoryTable = () => {
 
   // Fetch patients from IPC on mount
   useEffect(() => {
-    const fetchPatients = async () => {
+    const fetchData = async () => {
       try {
         const token = contxt.loggedIn.token;
-        const patients = await window.api.invoke("patients:getAll", token);
+        const [patients, suggestions] = await Promise.all([
+          window.api.invoke("patients:getAll", token),
+          window.api.invoke("suggestions:get", token),
+        ]);
         contxt.setPatientList(patients);
+        contxt.setCustomSuggestions(suggestions);
       } catch (e) {
-        console.log("Error fetching patients:", e);
+        console.log("Error fetching data:", e);
       }
     };
-    fetchPatients();
+    fetchData();
   }, []);
 
   // Build table rows from a patient list
