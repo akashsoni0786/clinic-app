@@ -139,7 +139,7 @@ const PatientDetails = () => {
     setEditedPatientDetails({ ...editedPatientDetails, name: value });
   };
   const handlePatientContactChange = (value) => {
-    setEditedPatientDetails({ ...editedPatientDetails, contact_no: value });
+    setEditedPatientDetails({ ...editedPatientDetails, contact_no: value.slice(0, 10) });
   };
   const handlePatientLocationChange = (value) => {
     setEditedPatientDetails({ ...editedPatientDetails, location: value });

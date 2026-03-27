@@ -64,21 +64,11 @@ const PatientForm = () => {
       deseaseErr:""
     };
     Object.keys(patient).forEach((data) => {
-      if (patient[data] === "" && data !== "registration_no") {
+      if (patient[data] === "" && data !== "registration_no" && data !== "contact_no") {
         errors = {
           ...errors,
           [data]: true,
           [data + "Err"]: "Please enter here!",
-        };
-      } else if (
-        Number(patient.contact_no) < 0 ||
-        Number(patient.contact_no) < 1111111111 ||
-        Number(patient.contact_no) > 9999999999
-      ) {
-        errors = {
-          ...errors,
-          contact_no: true,
-          contact_noErr: "Invalid mobile number!",
         };
       }
     });
@@ -118,10 +108,12 @@ const PatientForm = () => {
     });
   };
   const handleContactNoChange = (value) => {
-    setPatient({
-      ...patient,
-      contact_no: value,
-    });
+    if (/^\d*$/.test(value)) {
+      setPatient({
+        ...patient,
+        contact_no: value.slice(0, 10),
+      });
+    }
   };
   const handleDateChange = (value) => {
     setPatient({
@@ -221,8 +213,7 @@ const PatientForm = () => {
               value={patient.contact_no}
               onChange={handleContactNoChange}
               prefix={"+91"}
-              type="number"
-              max={10}
+              type="text"
               error={patientError.contact_no}
               helpText={
                 <span style={{ color: "red" }}>
