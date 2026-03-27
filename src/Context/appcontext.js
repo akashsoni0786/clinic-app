@@ -11,6 +11,11 @@ export const Context = (props) => {
     token: null,
     loggedin: false,
   });
+  const [customSuggestions, setCustomSuggestions] = useState({
+    medicines: [],
+    symptoms: [],
+    diseases: [],
+  });
 
   return (
     <contxtname.Provider
@@ -19,6 +24,8 @@ export const Context = (props) => {
         setPatientList,
         loggedIn,
         setLoggedIn,
+        customSuggestions,
+        setCustomSuggestions,
       }}
     >
       {props.children}
