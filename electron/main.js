@@ -36,7 +36,7 @@ function initDatabase() {
 
   const adapter = new FileSync(dbPath);
   db = low(adapter);
-  db.defaults({ users: [], patients: [], migrationDone: false }).write();
+  db.defaults({ users: [], patients: [], customSuggestions: { medicines: [], symptoms: [], diseases: [] }, migrationDone: false }).write();
 
   if (!db.get('migrationDone').value()) {
     const oldDbPath = path.join(__dirname, '../../api/db.json');
@@ -154,6 +154,17 @@ ipcMain.handle('patients:delete', (event, token, id) => {
   requireAuth(token);
   db.get('patients').remove({ id }).write();
   return { success: true };
+});
+
+ipcMain.handle('suggestions:get', (event, token) => {
+  requireAuth(token);
+  return db.get('customSuggestions').value();
+});
+
+ipcMain.handle('suggestions:save', (event, token, data) => {
+  requireAuth(token);
+  db.set('customSuggestions', data).write();
+  return db.get('customSuggestions').value();
 });
 
 ipcMain.handle('users:getAll', (event, token) => {

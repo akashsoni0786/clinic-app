@@ -16,6 +16,8 @@ const allowedChannels = [
   'users:changePassword',
   'data:export',
   'data:import',
+  'suggestions:get',
+  'suggestions:save',
   'update:install',
 ];
 
