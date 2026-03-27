@@ -11,6 +11,7 @@ import { useNavigate } from "react-router-dom";
 import { contxtname } from "../../../Context/appcontext";
 import MedicineField from "../../common/MedicineField";
 import homeopathySymptoms from "../../../data/homeopathySymptoms";
+import homeopathyDiseases from "../../../data/homeopathyDiseases";
 const PatientForm = () => {
   const contxt = React.useContext(contxtname);
   let date = new Date();
@@ -258,15 +259,17 @@ const PatientForm = () => {
               value={patient.symptoms}
               onChange={handleSymptomsChange}
               data={homeopathySymptoms}
+              customData={contxt.customSuggestions.symptoms}
               helpText={
                 <span style={{ color: "red" }}>{patientError.symptomsErr}</span>
               }
             />
-            <TextField
+            <MedicineField
               label="Enter desease name"
               value={patient.desease}
               onChange={handleDeseasename}
-              type="text"
+              data={homeopathyDiseases}
+              customData={contxt.customSuggestions.diseases}
               error={patientError.desease}
               helpText={
                 <span style={{ color: "red" }}>{patientError.deseaseErr}</span>
@@ -277,6 +280,7 @@ const PatientForm = () => {
               value={patient.medicines}
               error={patientError.medicines}
               onChange={handleMedicinesChange}
+              customData={contxt.customSuggestions.medicines}
               helpText={
                 <span style={{ color: "red" }}>
                   {patientError.medicinesErr}
