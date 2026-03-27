@@ -52,7 +52,8 @@ const MedicineField = ({ label, value, onChange, error, helpText, data }) => {
 
   const lastLine = useMemo(() => {
     const lines = (value || "").split("\n");
-    return lines[lines.length - 1].trim();
+    const parts = lines[lines.length - 1].split(",");
+    return parts[parts.length - 1].trim();
   }, [value]);
 
   const suggestions = useMemo(() => {
@@ -72,7 +73,9 @@ const MedicineField = ({ label, value, onChange, error, helpText, data }) => {
 
   const handleSelect = (medicine) => {
     const lines = (value || "").split("\n");
-    lines[lines.length - 1] = medicine;
+    const parts = lines[lines.length - 1].split(",");
+    parts[parts.length - 1] = " " + medicine;
+    lines[lines.length - 1] = parts.join(",");
     onChange(lines.join("\n"));
     setCaretPos(null);
   };
