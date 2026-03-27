@@ -163,7 +163,25 @@ ipcMain.handle('suggestions:get', (event, token) => {
 
 ipcMain.handle('suggestions:save', (event, token, data) => {
   requireAuth(token);
-  db.set('customSuggestions', data).write();
+  if (
+    !data ||
+    !Array.isArray(data.medicines) ||
+    !Array.isArray(data.symptoms) ||
+    !Array.isArray(data.diseases)
+  ) {
+    throw new Error('Invalid suggestions payload');
+  }
+  const isValidList = (arr) =>
+    arr.every((item) => typeof item === 'string' && item.trim().length > 0 && item.length <= 200);
+  if (!isValidList(data.medicines) || !isValidList(data.symptoms) || !isValidList(data.diseases)) {
+    throw new Error('Invalid suggestions payload');
+  }
+  const payload = {
+    medicines: data.medicines,
+    symptoms: data.symptoms,
+    diseases: data.diseases,
+  };
+  db.set('customSuggestions', payload).write();
   return db.get('customSuggestions').value();
 });
 
