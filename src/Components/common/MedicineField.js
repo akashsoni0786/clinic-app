@@ -1,77 +1,143 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import { TextField } from "@shopify/polaris";
 import defaultMedicines from "../../data/homeopathyMedicines";
 
+// Mirror div technique: textarea ki exact styles copy karke caret ka
+// pixel-perfect position nikalte hain
+const getCaretPixelPos = (textarea) => {
+  const computed = window.getComputedStyle(textarea);
+  const mirror = document.createElement("div");
+
+  [
+    "boxSizing", "width", "fontFamily", "fontSize", "fontWeight",
+    "lineHeight", "paddingTop", "paddingRight", "paddingBottom", "paddingLeft",
+    "borderTopWidth", "borderRightWidth", "borderBottomWidth", "borderLeftWidth",
+    "whiteSpace", "wordWrap", "overflowWrap",
+  ].forEach((prop) => {
+    mirror.style[prop] = computed[prop];
+  });
+
+  mirror.style.position = "absolute";
+  mirror.style.top = "0";
+  mirror.style.left = "-9999px";
+  mirror.style.visibility = "hidden";
+  mirror.style.whiteSpace = "pre-wrap";
+  mirror.style.wordWrap = "break-word";
+
+  mirror.textContent = textarea.value.substring(0, textarea.selectionStart);
+
+  const caretSpan = document.createElement("span");
+  caretSpan.textContent = "\u200b"; // zero-width space marks caret position
+  mirror.appendChild(caretSpan);
+
+  document.body.appendChild(mirror);
+
+  const textareaRect = textarea.getBoundingClientRect();
+  const mirrorRect = mirror.getBoundingClientRect();
+  const spanRect = caretSpan.getBoundingClientRect();
+  const lineHeight = parseFloat(computed.lineHeight) || 20;
+
+  document.body.removeChild(mirror);
+
+  return {
+    top: textareaRect.top + (spanRect.top - mirrorRect.top) + lineHeight,
+    left: textareaRect.left + (spanRect.left - mirrorRect.left),
+  };
+};
+
 const MedicineField = ({ label, value, onChange, error, helpText, data }) => {
   const medicines = data || defaultMedicines;
-  // Get the last line the doctor is currently typing
+  const wrapperRef = useRef(null);
+  const [caretPos, setCaretPos] = useState(null);
+
   const lastLine = useMemo(() => {
     const lines = (value || "").split("\n");
     return lines[lines.length - 1].trim();
   }, [value]);
 
-  // Show suggestions only when at least 2 chars typed on current line
   const suggestions = useMemo(() => {
     if (lastLine.length < 2) return [];
     const regex = new RegExp(lastLine, "i");
-    return medicines.filter((m) => regex.test(m)).slice(0, 10);
+    return medicines.filter((m) => regex.test(m)).slice(0, 8);
   }, [lastLine, medicines]);
+
+  const handleChange = (newValue) => {
+    onChange(newValue);
+    // setTimeout 0: browser ko DOM update karne dete hain pehle
+    setTimeout(() => {
+      const textarea = wrapperRef.current?.querySelector("textarea");
+      if (textarea) setCaretPos(getCaretPixelPos(textarea));
+    }, 0);
+  };
 
   const handleSelect = (medicine) => {
     const lines = (value || "").split("\n");
-    // Replace the last (partial) line with the selected medicine
     lines[lines.length - 1] = medicine;
     onChange(lines.join("\n"));
+    setCaretPos(null);
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Escape") setCaretPos(null);
   };
 
   return (
-    <div>
-      {suggestions.length > 0 && (
-        <div style={{ marginBottom: "6px" }}>
-          <p style={{ fontSize: "12px", color: "#6d7175", marginBottom: "4px" }}>
-            Suggestions:
-          </p>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
-            {suggestions.map((med) => (
-              <button
-                key={med}
-                type="button"
-                onClick={() => handleSelect(med)}
-                style={{
-                  padding: "4px 10px",
-                  fontSize: "12px",
-                  border: "1px solid #c9cccf",
-                  borderRadius: "20px",
-                  background: "#f6f6f7",
-                  cursor: "pointer",
-                  color: "#202223",
-                  whiteSpace: "nowrap",
-                }}
-                onMouseEnter={(e) => {
-                  e.target.style.background = "#e4e5e7";
-                  e.target.style.borderColor = "#8c9196";
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.background = "#f6f6f7";
-                  e.target.style.borderColor = "#c9cccf";
-                }}
-              >
-                {med}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
+    <div ref={wrapperRef}>
       <TextField
         label={label}
         value={value}
-        onChange={onChange}
+        onChange={handleChange}
+        onKeyDown={handleKeyDown}
         type="text"
         multiline={5}
         error={error}
         helpText={helpText}
         autoComplete="off"
       />
+      {suggestions.length > 0 && caretPos && (
+        <div
+          style={{
+            position: "fixed",
+            top: caretPos.top,
+            left: caretPos.left,
+            zIndex: 9999,
+            background: "#fff",
+            border: "1px solid #c9cccf",
+            borderRadius: "8px",
+            boxShadow: "0 4px 16px rgba(0,0,0,0.18)",
+            padding: "4px 0",
+            minWidth: "180px",
+            maxWidth: "300px",
+            maxHeight: "220px",
+            overflowY: "auto",
+          }}
+        >
+          {suggestions.map((med) => (
+            <div
+              key={med}
+              onMouseDown={(e) => {
+                e.preventDefault(); // textarea ka focus nahi jaata
+                handleSelect(med);
+              }}
+              style={{
+                padding: "7px 14px",
+                cursor: "pointer",
+                fontSize: "13px",
+                color: "#202223",
+                borderRadius: "4px",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "#f1f2f3";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "transparent";
+              }}
+            >
+              {med}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
