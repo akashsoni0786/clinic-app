@@ -45,8 +45,8 @@ const getCaretPixelPos = (textarea) => {
   };
 };
 
-const MedicineField = ({ label, value, onChange, error, helpText, data }) => {
-  const medicines = data || defaultMedicines;
+const MedicineField = ({ label, value, onChange, error, helpText, data, customData }) => {
+  const medicines = [...(data || defaultMedicines), ...(customData || [])];
   const wrapperRef = useRef(null);
   const [caretPos, setCaretPos] = useState(null);
 
