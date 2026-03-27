@@ -428,6 +428,7 @@ const PatientDetails = () => {
                     value={editedData.symptoms}
                     onChange={handleSymptomsChange}
                     data={homeopathySymptoms}
+                    customData={contxt.customSuggestions.symptoms}
                     helpText={
                       <span style={{ color: "red" }}>
                         {editedDataError.symptoms}
@@ -439,6 +440,7 @@ const PatientDetails = () => {
                     value={editedData.medicines}
                     error={editedDataError.medicinesErr}
                     onChange={handleMedicinesChange}
+                    customData={contxt.customSuggestions.medicines}
                     helpText={
                       <span style={{ color: "red" }}>
                         {editedDataError.medicines}
@@ -489,6 +491,7 @@ const PatientDetails = () => {
                     value={editedData.symptoms}
                     onChange={handleSymptomsChange}
                     data={homeopathySymptoms}
+                    customData={contxt.customSuggestions.symptoms}
                     helpText={
                       <span style={{ color: "red" }}>
                         {editedDataError.symptoms}
@@ -500,6 +503,7 @@ const PatientDetails = () => {
                     value={editedData.medicines}
                     error={editedDataError.medicinesErr}
                     onChange={handleMedicinesChange}
+                    customData={contxt.customSuggestions.medicines}
                     helpText={
                       <span style={{ color: "red" }}>
                         {editedDataError.medicines}
