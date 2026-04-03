@@ -31,6 +31,8 @@ const PatientForm = () => {
     id: regno,
     name: "",
     contact_no: "",
+    patient_age: "",
+    pathology_report: "",
     date: today,
     gender: "",
     location: "Lucknow",
@@ -116,6 +118,14 @@ const PatientForm = () => {
       });
     }
   };
+    const handleAgeChange = (value) => {
+    if (/^\d*$/.test(value)) {
+      setPatient({
+        ...patient,
+        patient_age: value.slice(0, 3),
+      });
+    }
+  };
   const handleDateChange = (value) => {
     setPatient({
       ...patient,
@@ -132,6 +142,12 @@ const PatientForm = () => {
     setPatient({
       ...patient,
       location: value,
+    });
+  };
+  const handlePathologyReportChange = (value) => {
+    setPatient({
+      ...patient,
+      pathology_report: value,
     });
   };
   const handleSymptomsChange = (value) => {
@@ -223,6 +239,12 @@ const PatientForm = () => {
               }
             />
             <TextField
+              label="Enter patient's age"
+              value={patient.patient_age}
+              onChange={handleAgeChange}
+              type="text"
+            />
+            <TextField
               label="Enter Date"
               value={patient.date}
               error={patientError.date}
@@ -252,6 +274,14 @@ const PatientForm = () => {
               helpText={
                 <span style={{ color: "red" }}>{patientError.locationErr}</span>
               }
+            />
+            <TextField
+              label="Enter Pathalogy Report"
+              error={patientError.pathology_report}
+              value={patient.pathology_report}
+              onChange={handlePathologyReportChange}
+              type="text"
+              multiline={5}
             />
             <MedicineField
               label="Enter patient's symptoms"

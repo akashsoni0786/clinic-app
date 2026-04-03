@@ -40,6 +40,23 @@
       "react-app/jest"
     ]
   },
+  "build": {
+    "appId": "com.meditrack.app",
+    "productName": "MediTrack",
+    "extends": null,
+    "files": [
+      "build/**/*",
+      "electron/**/*",
+      "node_modules/**/*"
+    ],
+    "directories": {
+      "buildResources": "assets"
+    },
+    "win": {
+      "icon": "assets/icon.png",
+      "target": "nsis"
+    }
+  },
   "browserslist": {
     "production": [
       ">0.2%",

@@ -32,13 +32,16 @@ const PatientDetails = () => {
     contact_no: location.state.rowdata.contact_no,
     location: location.state.rowdata.location,
     gender: location.state.rowdata.gender,
+    patient_age: location.state.rowdata.patient_age,
   });
+  console.log("patientDatapatientData", patientData);
   const [activeEditDetails, setActiveEditDetails] = useState(false);
   const [editedPatientDetails, setEditedPatientDetails] = useState({
     name: "",
     contact_no: "",
     location: "",
     gender: "",
+    patient_age: "",
   });
   const [editedPatientDetailsError, setEditedPatientDetailsError] = useState({
     name: false,
@@ -54,6 +57,7 @@ const PatientDetails = () => {
     date: "",
     symptoms: "",
     medicines: "",
+    pathology_report: "",
   });
   const [editedDataError, setEditedDataError] = useState({
     date: "",
@@ -66,7 +70,7 @@ const PatientDetails = () => {
   const setuppatientData = (allptntdata) => {
     let temp = [];
     [...allptntdata].reverse().forEach((data, visualIndex) => {
-      const originalIndex = allptntdata.length - 1 - visualIndex;
+      const originalIndex = visualIndex;
       let symp = data.daysymptoms.replaceAll("\n", "<br/> &#x2022 ");
       let medi = data.daymedicines.replaceAll("\n", "<br/> &#x2022 ");
       temp.push([
@@ -95,6 +99,8 @@ const PatientDetails = () => {
                       date: data.todaydate,
                       symptoms: data.daysymptoms,
                       medicines: data.daymedicines,
+                      pathology_report: data.pathology_report,
+
                     });
                   },
                 },
@@ -129,12 +135,20 @@ const PatientDetails = () => {
       symptoms: value,
     });
   };
+  const handlePathologyReportChange = (value) => {
+    setEditedData({
+      ...editedData,
+      pathology_report: value,
+    });
+  };
+
   const handleMedicinesChange = (value) => {
     setEditedData({
       ...editedData,
       medicines: value,
     });
   };
+  console.log("editedPatientDetails",editedPatientDetails)
   const handlePatientNameChange = (value) => {
     setEditedPatientDetails({ ...editedPatientDetails, name: value });
   };
@@ -143,6 +157,14 @@ const PatientDetails = () => {
   };
   const handlePatientLocationChange = (value) => {
     setEditedPatientDetails({ ...editedPatientDetails, location: value });
+  };
+  const handlePatientAgeChange = (value) => {
+    if (/^\d*$/.test(value)) {
+      setEditedPatientDetails({
+        ...editedPatientDetails,
+        patient_age: value.slice(0, 3),
+      });
+    }
   };
   const handlePatientGenderChange = (value) => {
     setEditedPatientDetails({ ...editedPatientDetails, gender: value });
@@ -179,6 +201,7 @@ const PatientDetails = () => {
           contact_no: editedPatientDetails.contact_no,
           location: editedPatientDetails.location,
           gender: editedPatientDetails.gender,
+          patient_age: editedPatientDetails.patient_age,
         };
         await window.api.invoke("patients:update", token, location.state.rowdata.id, updatedData);
         const alldata = await window.api.invoke("patients:getAll", token);
@@ -188,7 +211,24 @@ const PatientDetails = () => {
           contact_no: editedPatientDetails.contact_no,
           location: editedPatientDetails.location,
           gender: editedPatientDetails.gender,
+          patient_age: editedPatientDetails.patient_age,
         });
+        setEditedPatientDetails({
+            name: editedPatientDetails.name,
+            contact_no: editedPatientDetails.contact_no,
+            location: editedPatientDetails.location,
+            gender: editedPatientDetails.gender,
+            patient_age: editedPatientDetails.patient_age,
+          });
+
+          location.state.rowdata ={
+            ...location.state.rowdata,
+            name: editedPatientDetails.name,
+            contact_no: editedPatientDetails.contact_no,
+            location: editedPatientDetails.location,
+            gender: editedPatientDetails.gender,
+            patient_age: editedPatientDetails.patient_age,
+          }
         setActiveEditDetails(false);
       } catch (e) {
         console.log(e);
@@ -226,11 +266,13 @@ const PatientDetails = () => {
         noError = false;
       }
     });
+    console.log("patientDatapatientData 3", editIndex);
     let tempData = { ...location.state.rowdata };
     tempData.dateWiseData[editIndex] = {
       todaydate: editedData.date,
       daysymptoms: editedData.symptoms,
       daymedicines: editedData.medicines,
+      pathology_report: editedData.pathology_report,
     };
     if (noError) {
       try {
@@ -238,10 +280,11 @@ const PatientDetails = () => {
         await window.api.invoke("patients:update", token, location.state.rowdata.id, tempData);
         const alldata = await window.api.invoke("patients:getAll", token);
         contxt.setPatientList(alldata);
+        console.log("patientDatapatientData 2",alldata.find(p => p.id === location.state.rowdata.id).dateWiseData)
         setuppatientData(alldata.find(p => p.id === location.state.rowdata.id).dateWiseData);
         setActiveEdit(false);
         setEditIndex("");
-        setEditedData({ date: "", symptoms: "", medicines: "" });
+        setEditedData({ date: "", symptoms: "", medicines: "",pathology_report: "" });
       } catch (e) {
         console.log(e);
       }
@@ -335,6 +378,7 @@ const PatientDetails = () => {
                   <p>Mobile No.: {patientInfo.contact_no}</p>
                   <p>Location : {patientInfo.location}</p>
                   <p>Gender : {patientInfo.gender}</p>
+                  <p>Age : {patientInfo.patient_age}</p>
                 </div>
                 <div style={{ display: "flex", gap: "8px" }}>
                   <Button
@@ -345,6 +389,7 @@ const PatientDetails = () => {
                         contact_no: location.state.rowdata.contact_no,
                         location: location.state.rowdata.location,
                         gender: location.state.rowdata.gender,
+                        patient_age: location.state.rowdata.patient_age,
                       });
                       setEditedPatientDetailsError({
                         name: false, nameErr: "",
@@ -360,7 +405,7 @@ const PatientDetails = () => {
                   <Button
                     size="slim"
                     onClick={() => {
-                      setEditedData({ date: new Date().toISOString().split("T")[0], symptoms: "", medicines: "" });
+                      setEditedData({ date: new Date().toISOString().split("T")[0], symptoms: "", medicines: "",pathology_report: "" });
                       setActiveAdd(true);
                     }}
                   >
@@ -421,6 +466,13 @@ const PatientDetails = () => {
                         {editedDataError.date}
                       </span>
                     }
+                  />
+                  <TextField
+                    label="Enter New Pathology Report"
+                    value={editedData.pathology_report}
+                    onChange={handlePathologyReportChange}
+                    type="text"
+                    multiline={3}
                   />
                   <MedicineField
                     label="Enter patient's symptoms"
@@ -484,6 +536,13 @@ const PatientDetails = () => {
                         {editedDataError.date}
                       </span>
                     }
+                  />
+                  <TextField
+                    label="Enter Pathology Report"
+                    value={editedData.pathology_report}
+                    onChange={handlePathologyReportChange}
+                    type="text"
+                    multiline={3}
                   />
                   <MedicineField
                     label="Enter patient's symptoms"
@@ -584,6 +643,11 @@ const PatientDetails = () => {
                         {editedPatientDetailsError.contact_noErr}
                       </span>
                     }
+                  />
+                  <TextField
+                    label="Age"
+                    value={editedPatientDetails.patient_age}
+                    onChange={handlePatientAgeChange}                  
                   />
                   <TextField
                     label="Location"
