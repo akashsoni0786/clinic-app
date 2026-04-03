@@ -58,7 +58,9 @@ const PatientDetails = () => {
     symptoms: "",
     medicines: "",
     pathology_report: "",
+    fee: "",
   });
+  console.log("editedDataeditedData", editedData);
   const [editedDataError, setEditedDataError] = useState({
     date: "",
     dateErr: false,
@@ -73,6 +75,8 @@ const PatientDetails = () => {
       const originalIndex = visualIndex;
       let symp = data.daysymptoms.replaceAll("\n", "<br/> &#x2022 ");
       let medi = data.daymedicines.replaceAll("\n", "<br/> &#x2022 ");
+      let fee = data.fee ? data.fee : "";
+      console.log("sympsympsymp", data);
       temp.push([
         data.todaydate,
         <div
@@ -82,6 +86,10 @@ const PatientDetails = () => {
         <div
           key={visualIndex}
           dangerouslySetInnerHTML={{ __html: "&#x2022 " + medi }}
+        />,
+        <div
+          key={visualIndex}
+          dangerouslySetInnerHTML={{ __html: "₹ "+fee }}
         />,
         <ActionList
           key={visualIndex}
@@ -100,7 +108,7 @@ const PatientDetails = () => {
                       symptoms: data.daysymptoms,
                       medicines: data.daymedicines,
                       pathology_report: data.pathology_report,
-
+                      fee:data.fee?data.fee:""
                     });
                   },
                 },
@@ -141,6 +149,14 @@ const PatientDetails = () => {
       pathology_report: value,
     });
   };
+  const handleFeeChange = (value) => {
+    if (/^\d*$/.test(value)) {
+      setEditedData({
+        ...editedData,
+        fee: value,
+      });
+    }
+  };
 
   const handleMedicinesChange = (value) => {
     setEditedData({
@@ -148,7 +164,7 @@ const PatientDetails = () => {
       medicines: value,
     });
   };
-  console.log("editedPatientDetails",editedPatientDetails)
+  
   const handlePatientNameChange = (value) => {
     setEditedPatientDetails({ ...editedPatientDetails, name: value });
   };
@@ -273,6 +289,7 @@ const PatientDetails = () => {
       daysymptoms: editedData.symptoms,
       daymedicines: editedData.medicines,
       pathology_report: editedData.pathology_report,
+      fee: editedData.fee
     };
     if (noError) {
       try {
@@ -327,6 +344,8 @@ const PatientDetails = () => {
         todaydate: editedData.date,
         daysymptoms: editedData.symptoms,
         daymedicines: editedData.medicines,
+        pathology_report: editedData.pathology_report,
+        fee: editedData.fee
       },
       ...tempData.dateWiseData,
     ];
@@ -425,8 +444,8 @@ const PatientDetails = () => {
             {/* <Scrollable shadow> */}
             {/* <Card> */}
             <DataTable
-              columnContentTypes={["text", "text", "text"]}
-              headings={["Date", "Symptoms", "Medicines", "Actions"]}
+              columnContentTypes={["text", "text", "text", "text"]}
+              headings={["Date", "Symptoms", "Medicines","Fee", "Actions"]}
               rows={patientData}
             />
             {/* </Card> */}
@@ -466,6 +485,12 @@ const PatientDetails = () => {
                         {editedDataError.date}
                       </span>
                     }
+                  />
+                  <TextField
+                    label="Enter Fee"
+                    value={editedData.fee}
+                    onChange={handleFeeChange}
+                    type="text"
                   />
                   <TextField
                     label="Enter New Pathology Report"
@@ -543,6 +568,12 @@ const PatientDetails = () => {
                     onChange={handlePathologyReportChange}
                     type="text"
                     multiline={3}
+                  />
+                  <TextField
+                    label="Enter Fee"
+                    value={editedData.fee}
+                    onChange={handleFeeChange}
+                    type="text"
                   />
                   <MedicineField
                     label="Enter patient's symptoms"

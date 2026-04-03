@@ -32,6 +32,7 @@ const PatientForm = () => {
     name: "",
     contact_no: "",
     patient_age: "",
+    fee: "",
     pathology_report: "",
     date: today,
     gender: "",
@@ -64,7 +65,8 @@ const PatientForm = () => {
       medicines: false,
       medicinesErr: "",
       desease:false,
-      deseaseErr:""
+      deseaseErr:"",
+      fee:"",
     };
     Object.keys(patient).forEach((data) => {
       if (patient[data] === "" && data !== "registration_no" && data !== "contact_no") {
@@ -90,6 +92,8 @@ const PatientForm = () => {
           todaydate: patient.date,
           daysymptoms: patient.symptoms,
           daymedicines: patient.medicines,
+          pathology_report:patient.pathology_report,
+          fee:patient.fee
         },
       ];
       try {
@@ -123,6 +127,14 @@ const PatientForm = () => {
       setPatient({
         ...patient,
         patient_age: value.slice(0, 3),
+      });
+    }
+  };
+  const handleFeeChange = (value) => {
+    if (/^\d*$/.test(value)) {
+      setPatient({
+        ...patient,
+        fee: value,
       });
     }
   };
@@ -180,7 +192,7 @@ const PatientForm = () => {
       symptoms: "",
       medicines: "",
       desease: "",
-      dateWiseData: [{ todaydate: "", daysymptoms: "", daymedicines: "" }],
+      dateWiseData: [{ todaydate: "", daysymptoms: "", daymedicines: "",pathology_report:"",fee:"" }],
     });
     setPatientError({});
   };
@@ -316,6 +328,12 @@ const PatientForm = () => {
                   {patientError.medicinesErr}
                 </span>
               }
+            />
+            <TextField
+              label="Enter Fee"
+              value={patient.fee}
+              onChange={handleFeeChange}
+              type="text"
             />
           </Scrollable>
         </Form>
