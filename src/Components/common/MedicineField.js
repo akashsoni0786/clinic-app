@@ -1,9 +1,6 @@
-import React, { useMemo, useRef, useState } from "react";
-import { TextField } from "@shopify/polaris";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import defaultMedicines from "../../data/homeopathyMedicines";
 
-// Mirror div technique: textarea ki exact styles copy karke caret ka
-// pixel-perfect position nikalte hain
 const getCaretPixelPos = (textarea) => {
   const computed = window.getComputedStyle(textarea);
   const mirror = document.createElement("div");
@@ -27,7 +24,7 @@ const getCaretPixelPos = (textarea) => {
   mirror.textContent = textarea.value.substring(0, textarea.selectionStart);
 
   const caretSpan = document.createElement("span");
-  caretSpan.textContent = "\u200b"; // zero-width space marks caret position
+  caretSpan.textContent = "\u200b";
   mirror.appendChild(caretSpan);
 
   document.body.appendChild(mirror);
@@ -52,6 +49,7 @@ const MedicineField = ({ label, value, onChange, error, helpText, data, customDa
   );
   const wrapperRef = useRef(null);
   const [caretPos, setCaretPos] = useState(null);
+  const [activeIndex, setActiveIndex] = useState(0);
 
   const lastLine = useMemo(() => {
     const lines = (value || "").split("\n");
@@ -65,13 +63,16 @@ const MedicineField = ({ label, value, onChange, error, helpText, data, customDa
     return medicines.filter((m) => regex.test(m)).slice(0, 8);
   }, [lastLine, medicines]);
 
-  const handleChange = (newValue) => {
-    onChange(newValue);
-    // setTimeout 0: browser ko DOM update karne dete hain pehle
-    setTimeout(() => {
+  useEffect(() => {
+    setActiveIndex(0);
+  }, [suggestions.length, lastLine]);
+
+  const handleChange = (event) => {
+    onChange(event.target.value);
+    window.requestAnimationFrame(() => {
       const textarea = wrapperRef.current?.querySelector("textarea");
       if (textarea) setCaretPos(getCaretPixelPos(textarea));
-    }, 0);
+    });
   };
 
   const handleSelect = (medicine) => {
@@ -81,25 +82,43 @@ const MedicineField = ({ label, value, onChange, error, helpText, data, customDa
     lines[lines.length - 1] = parts.join(",");
     onChange(lines.join("\n"));
     setCaretPos(null);
+    setActiveIndex(0);
   };
 
   const handleKeyDown = (e) => {
+    if (suggestions.length > 0 && caretPos) {
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setActiveIndex((current) => (current + 1) % suggestions.length);
+        return;
+      }
+      if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setActiveIndex((current) => (current === 0 ? suggestions.length - 1 : current - 1));
+        return;
+      }
+      if (e.key === "Enter") {
+        e.preventDefault();
+        handleSelect(suggestions[activeIndex]);
+        return;
+      }
+    }
+
     if (e.key === "Escape") setCaretPos(null);
   };
 
   return (
-    <div ref={wrapperRef}>
-      <TextField
-        label={label}
+    <div ref={wrapperRef} className="mb-6">
+      <label className="mb-2 block text-sm font-medium text-slate-700">{label}</label>
+      <textarea
         value={value}
         onChange={handleChange}
         onKeyDown={handleKeyDown}
-        type="text"
-        multiline={5}
-        error={error}
-        helpText={helpText}
+        rows={5}
+        className={`input-base min-h-[140px] ${error ? "border-red-500" : "border-slate-300"}`}
         autoComplete="off"
       />
+      {helpText && <p className="mt-2 text-sm text-red-600">{helpText}</p>}
       {suggestions.length > 0 && caretPos && (
         <div
           style={{
@@ -109,38 +128,28 @@ const MedicineField = ({ label, value, onChange, error, helpText, data, customDa
             zIndex: 9999,
             background: "#fff",
             border: "1px solid #c9cccf",
-            borderRadius: "8px",
-            boxShadow: "0 4px 16px rgba(0,0,0,0.18)",
-            padding: "4px 0",
+            borderRadius: "0.5rem",
+            boxShadow: "0 10px 30px rgba(0,0,0,0.12)",
+            padding: "0.25rem 0",
             minWidth: "180px",
             maxWidth: "300px",
             maxHeight: "220px",
             overflowY: "auto",
           }}
         >
-          {suggestions.map((med) => (
-            <div
+          {suggestions.map((med, index) => (
+            <button
               key={med}
+              type="button"
               onMouseDown={(e) => {
-                e.preventDefault(); // textarea ka focus nahi jaata
+                e.preventDefault();
                 handleSelect(med);
               }}
-              style={{
-                padding: "7px 14px",
-                cursor: "pointer",
-                fontSize: "13px",
-                color: "#202223",
-                borderRadius: "4px",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = "#f1f2f3";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = "transparent";
-              }}
+              onMouseEnter={() => setActiveIndex(index)}
+              className={`block w-full px-4 py-2 text-left text-sm ${index === activeIndex ? "bg-slate-100 text-slate-900" : "text-slate-800"}`}
             >
               {med}
-            </div>
+            </button>
           ))}
         </div>
       )}

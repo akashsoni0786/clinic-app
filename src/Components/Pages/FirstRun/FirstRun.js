@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { Form, FormLayout, TextField, Button, Spinner, Banner } from "@shopify/polaris";
 
 const FirstRun = ({ onComplete }) => {
   const [name, setName] = useState("");
@@ -12,13 +11,16 @@ const FirstRun = ({ onComplete }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!name || !username || !password || !confirm) {
-      setError("All fields are required."); return;
+      setError("All fields are required.");
+      return;
     }
     if (password !== confirm) {
-      setError("Passwords do not match."); return;
+      setError("Passwords do not match.");
+      return;
     }
     if (password.length < 6) {
-      setError("Password must be at least 6 characters."); return;
+      setError("Password must be at least 6 characters.");
+      return;
     }
     setError("");
     setLoading(true);
@@ -38,30 +40,71 @@ const FirstRun = ({ onComplete }) => {
 
   return (
     <div className="container">
-      <div className="flex-vertical login-page">
-        <div className="login-brand">
+      <div className="flex min-h-[calc(100vh-110px)] flex-col items-center justify-center gap-8 py-10">
+        <div className="flex flex-col items-center gap-4 text-center">
           <img src="logo.png" alt="MediTrack" className="login-brand-logo" />
           <span className="login-brand-name">MediTrack</span>
           <p className="welcome-heading">First time setup — create your admin account</p>
         </div>
-        <div className="login-form">
-          <Form onSubmit={handleSubmit}>
-            <FormLayout>
-              {error && <Banner status="critical">{error}</Banner>}
-              <TextField requiredIndicator value={name} onChange={setName} label="Full Name" autoComplete="name" />
-              <TextField requiredIndicator value={username} onChange={setUsername} label="Username" autoComplete="username" />
-              <TextField requiredIndicator value={password} onChange={setPassword} label="Password" type="password" autoComplete="new-password" />
-              <TextField requiredIndicator value={confirm} onChange={setConfirm} label="Confirm Password" type="password" autoComplete="new-password" />
-              <Button primary submit disabled={loading}>
-                {loading ? <Spinner accessibilityLabel="Creating" size="small" /> : "Create Admin Account"}
-              </Button>
-            </FormLayout>
-          </Form>
+        <div className="w-full max-w-md rounded-[1.5rem] bg-white p-8 shadow-xl">
+          {error && (
+            <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              {error}
+            </div>
+          )}
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div>
+              <label className="mb-2 block text-sm font-medium text-slate-700">Full Name</label>
+              <input
+                type="text"
+                autoComplete="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="input-base"
+              />
+            </div>
+            <div>
+              <label className="mb-2 block text-sm font-medium text-slate-700">Username</label>
+              <input
+                type="text"
+                autoComplete="username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="input-base"
+              />
+            </div>
+            <div>
+              <label className="mb-2 block text-sm font-medium text-slate-700">Password</label>
+              <input
+                type="password"
+                autoComplete="new-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="input-base"
+              />
+            </div>
+            <div>
+              <label className="mb-2 block text-sm font-medium text-slate-700">Confirm Password</label>
+              <input
+                type="password"
+                autoComplete="new-password"
+                value={confirm}
+                onChange={(e) => setConfirm(e.target.value)}
+                className="input-base"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full rounded-2xl bg-sky-600 px-4 py-3 text-white transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {loading ? "Creating..." : "Create Admin Account"}
+            </button>
+          </form>
         </div>
       </div>
     </div>
   );
 };
-
 
 export default FirstRun;

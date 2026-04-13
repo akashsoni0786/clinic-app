@@ -285,7 +285,6 @@ import homeopathySymptoms from "../../../data/homeopathySymptoms";
 ```
 Replace with:
 ```js
-import homeopathySymptoms from "../../../data/homeopathySymptoms";
 import homeopathyDiseases from "../../../data/homeopathyDiseases";
 ```
 

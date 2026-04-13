@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { Form, FormLayout, TextField, Button, Spinner, Banner } from "@shopify/polaris";
 import { contxtname } from "../../../Context/appcontext";
 
 const Login = () => {
@@ -40,38 +39,47 @@ const Login = () => {
 
   return (
     <div className="container">
-      <div className="flex-vertical login-page">
-        <div className="login-brand">
+      <div className="flex min-h-[calc(100vh-110px)] flex-col items-center justify-center gap-8 py-10">
+        <div className="flex flex-col items-center gap-4 text-center">
           <img src="logo.png" alt="MediTrack" className="login-brand-logo" />
           <span className="login-brand-name">MediTrack</span>
           <p className="welcome-heading">Welcome back — please sign in</p>
         </div>
-        <div className="flex-horizon" style={{ gap: "60px", alignItems: "flex-start", flexWrap: "wrap" }}>
-          <div className="login-form">
-            <Form onSubmit={handleSubmit}>
-              <FormLayout>
-                {error && <Banner status="critical">{error}</Banner>}
-                <TextField
-                  requiredIndicator
-                  value={username}
-                  onChange={setUsername}
-                  label="Username"
-                  autoComplete="username"
-                />
-                <TextField
-                  requiredIndicator
-                  value={password}
-                  onChange={setPassword}
-                  label="Password"
-                  type="password"
-                  autoComplete="current-password"
-                />
-                <Button primary submit disabled={loading} fullWidth>
-                  {loading ? <Spinner accessibilityLabel="Logging in" size="small" /> : "Login"}
-                </Button>
-              </FormLayout>
-            </Form>
-          </div>
+        <div className="w-full max-w-md rounded-[1.5rem] bg-white p-8 shadow-xl">
+          {error && (
+            <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              {error}
+            </div>
+          )}
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div>
+              <label className="mb-2 block text-sm font-medium text-slate-700">Username</label>
+              <input
+                type="text"
+                autoComplete="username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="input-base"
+              />
+            </div>
+            <div>
+              <label className="mb-2 block text-sm font-medium text-slate-700">Password</label>
+              <input
+                type="password"
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="input-base"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full rounded-2xl bg-sky-600 px-4 py-3 text-white transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {loading ? "Logging in..." : "Login"}
+            </button>
+          </form>
         </div>
       </div>
     </div>

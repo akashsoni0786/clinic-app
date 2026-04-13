@@ -1,6 +1,5 @@
-import { Tabs, Banner, Button } from "@shopify/polaris";
-import { useState, useCallback, useEffect } from "react";
-import { Route, Routes, useNavigate } from "react-router-dom";
+import React, { useState, useCallback, useEffect } from "react";
+import { Route, Routes, useNavigate, useLocation } from "react-router-dom";
 import HistoryTable from "./Components/Pages/History/historyTable";
 import Home from "./Components/Pages/HomePage/Home";
 import Login from "./Components/Pages/Login/login";
@@ -9,7 +8,6 @@ import PatientForm from "./Components/Pages/PatientForm/patientForm";
 import AdminPanel from "./Components/Pages/Admin/AdminPanel";
 import Settings from "./Components/Pages/Settings/Settings";
 import { contxtname } from "./Context/appcontext";
-import React from "react";
 
 function Panel() {
   const contxt = React.useContext(contxtname);
@@ -18,9 +16,10 @@ function Panel() {
   const [updateAvailable, setUpdateAvailable] = useState(false);
   const [updateReady, setUpdateReady] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const baseTabs = [
-    { id: "history", content: "All Patients", accessibilityLabel: "All Patients", panelID: "/history" },
+    { id: "history", content: "All Patients", panelID: "/history" },
     { id: "add-new-patient", content: "Add New Patient", panelID: "/patientform" },
   ];
   const adminTabs = [
@@ -29,16 +28,25 @@ function Panel() {
   ];
   const tabs = isAdmin ? [...baseTabs, ...adminTabs] : baseTabs;
 
-  const handleTabChange = useCallback((selectedTabIndex) => {
-    setSelected(selectedTabIndex);
-    navigate(tabs[selectedTabIndex].panelID);
-  }, [tabs]);
+  const handleTabChange = useCallback(
+    (selectedTabIndex) => {
+      setSelected(selectedTabIndex);
+      navigate(tabs[selectedTabIndex].panelID);
+    },
+    [navigate, tabs]
+  );
 
   useEffect(() => {
-    navigate("/history");
-  }, []);
+    const currentIndex = tabs.findIndex((tab) => tab.panelID === location.pathname);
+    if (currentIndex !== -1) setSelected(currentIndex);
+  }, [location.pathname, tabs]);
 
-  // Register update event listeners via contextBridge
+  useEffect(() => {
+    if (location.pathname === "/" || location.pathname === "/home") {
+      navigate("/history");
+    }
+  }, [location.pathname, navigate]);
+
   useEffect(() => {
     if (window.api && window.api.onUpdateAvailable) {
       const unlistenAvailable = window.api.onUpdateAvailable(() => setUpdateAvailable(true));
@@ -48,6 +56,7 @@ function Panel() {
         if (unlistenDownloaded) unlistenDownloaded();
       };
     }
+    return undefined;
   }, []);
 
   const handleLogout = async () => {
@@ -58,15 +67,22 @@ function Panel() {
   return (
     <div>
       {updateReady && (
-        <Banner
-          status="info"
-          action={{ content: "Install & Restart", onAction: () => window.api.invoke("update:install") }}
-        >
-          Update downloaded. Restart the app to apply.
-        </Banner>
+        <div className="bg-sky-50 border border-sky-200 text-sky-900 p-4 text-sm">
+          <div className="font-semibold">Update downloaded.</div>
+          <div className="mt-1">Restart the app to apply.</div>
+          <button
+            type="button"
+            className="mt-3 inline-flex rounded-full bg-sky-600 px-3 py-1.5 text-white hover:bg-sky-700"
+            onClick={() => window.api.invoke("update:install")}
+          >
+            Install & Restart
+          </button>
+        </div>
       )}
       {updateAvailable && !updateReady && (
-        <Banner status="info">A new update is downloading…</Banner>
+        <div className="bg-slate-50 border border-slate-300 text-slate-900 p-4 text-sm">
+          A new update is downloading…
+        </div>
       )}
       <div className="app-header">
         <div className="brand">
@@ -74,11 +90,35 @@ function Panel() {
           <span className="brand-name">MediTrack</span>
         </div>
         <div className="header-user">
-          <span><strong>{contxt.loggedIn.name}</strong> &nbsp;·&nbsp; {contxt.loggedIn.role}</span>
-          <Button size="slim" onClick={handleLogout}>Logout</Button>
+          <span>
+            <strong>{contxt.loggedIn.name}</strong> &nbsp;·&nbsp; {contxt.loggedIn.role}
+          </span>
+          <button
+            type="button"
+            className="rounded-full border border-slate-200 bg-slate-100 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-200"
+            onClick={handleLogout}
+          >
+            Logout
+          </button>
         </div>
       </div>
-      <Tabs tabs={tabs} selected={selected} onSelect={handleTabChange}>
+      <nav className="mx-auto flex flex-wrap gap-2 px-4 py-3">
+          {tabs.map((tab, idx) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => handleTabChange(idx)}
+              className={`rounded-full h-10 px-4 py-2 text-sm font-semibold ${
+                idx === selected
+                  ? "bg-sky-600 text-white"
+                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+              }`}
+            >
+              {tab.content}
+            </button>
+          ))}
+        </nav>
+      <div className="container py-4">
         <Routes>
           <Route path="/" element={<Login />} />
           <Route path="/home" element={<Home />} />
@@ -88,7 +128,7 @@ function Panel() {
           {isAdmin && <Route path="/admin" element={<AdminPanel />} />}
           {isAdmin && <Route path="/settings" element={<Settings />} />}
         </Routes>
-      </Tabs>
+      </div>
     </div>
   );
 }

@@ -1,23 +1,8 @@
-import {
-  Card,
-  DataTable,
-  Scrollable,
-  Button,
-  Page,
-  Layout,
-  LegacyCard,
-  Modal,
-  LegacyStack,
-  TextContainer,
-  ActionList,
-  TextField,
-} from "@shopify/polaris";
 import React, { useEffect, useState } from "react";
-import { EditMinor, DeleteMinor } from "@shopify/polaris-icons";
 import { contxtname } from "../../../Context/appcontext";
-import { useLocation } from "react-router-dom";
 import MedicineField from "../../common/MedicineField";
 import homeopathySymptoms from "../../../data/homeopathySymptoms";
+import { useLocation } from "react-router-dom";
 
 const PatientDetails = () => {
   const contxt = React.useContext(contxtname);
@@ -91,39 +76,35 @@ const PatientDetails = () => {
           key={visualIndex}
           dangerouslySetInnerHTML={{ __html: "₹ "+fee }}
         />,
-        <ActionList
-          key={visualIndex}
-          actionRole="menuitem"
-          sections={[
-            {
-              items: [
-                {
-                  content: "Edit",
-                  icon: EditMinor,
-                  onAction: () => {
-                    setActiveEdit(true);
-                    setEditIndex(originalIndex);
-                    setEditedData({
-                      date: data.todaydate,
-                      symptoms: data.daysymptoms,
-                      medicines: data.daymedicines,
-                      pathology_report: data.pathology_report,
-                      fee:data.fee?data.fee:""
-                    });
-                  },
-                },
-                {
-                  content: "Delete",
-                  icon: DeleteMinor,
-                  onAction: () => {
-                    setEditIndex(originalIndex);
-                    setActiveDel(true);
-                  },
-                },
-              ],
-            },
-          ]}
-        />,
+        <div key={visualIndex} className="flex gap-2">
+          <button
+            type="button"
+            className="rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-sm text-slate-700 hover:bg-slate-200"
+            onClick={() => {
+              setActiveEdit(true);
+              setEditIndex(originalIndex);
+              setEditedData({
+                date: data.todaydate,
+                symptoms: data.daysymptoms,
+                medicines: data.daymedicines,
+                pathology_report: data.pathology_report,
+                fee: data.fee ? data.fee : "",
+              });
+            }}
+          >
+            Edit
+          </button>
+          <button
+            type="button"
+            className="rounded-full border border-red-200 bg-red-50 px-3 py-1 text-sm text-red-700 hover:bg-red-100"
+            onClick={() => {
+              setEditIndex(originalIndex);
+              setActiveDel(true);
+            }}
+          >
+            Delete
+          </button>
+        </div>,
       ]);
     });
     setPatientData(temp);
@@ -388,326 +369,346 @@ const PatientDetails = () => {
           <h1 className="page-heading">{patientInfo.name}</h1>
         </div>
       </div>
-      <Page fullWidth>
-        <Layout>
-          <Layout.Section secondary>
-            <LegacyCard title="Patient Details" sectioned>
-              <div className="flex-horizon-btw">
-                <div>
-                  <p>Mobile No.: {patientInfo.contact_no}</p>
-                  <p>Location : {patientInfo.location}</p>
-                  <p>Gender : {patientInfo.gender}</p>
-                  <p>Age : {patientInfo.patient_age}</p>
-                </div>
-                <div style={{ display: "flex", gap: "8px" }}>
-                  <Button
-                    size="slim"
-                    onClick={() => {
-                      setEditedPatientDetails({
-                        name: location.state.rowdata.name,
-                        contact_no: location.state.rowdata.contact_no,
-                        location: location.state.rowdata.location,
-                        gender: location.state.rowdata.gender,
-                        patient_age: location.state.rowdata.patient_age,
-                      });
-                      setEditedPatientDetailsError({
-                        name: false, nameErr: "",
-                        contact_no: false, contact_noErr: "",
-                        location: false, locationErr: "",
-                        gender: false, genderErr: "",
-                      });
-                      setActiveEditDetails(true);
-                    }}
-                  >
-                    Edit Details
-                  </Button>
-                  <Button
-                    size="slim"
-                    onClick={() => {
-                      setEditedData({ date: new Date().toISOString().split("T")[0], symptoms: "", medicines: "",pathology_report: "" });
-                      setActiveAdd(true);
-                    }}
-                  >
-                    Add New Details
-                  </Button>
-                </div>
-              </div>
-            </LegacyCard>
-          </Layout.Section>
-        </Layout>
+      <div className="space-y-5 p25">
+        <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
+            <div className="space-y-2">
+              <p>Mobile No.: {patientInfo.contact_no}</p>
+              <p>Location : {patientInfo.location}</p>
+              <p>Gender : {patientInfo.gender}</p>
+              <p>Age : {patientInfo.patient_age}</p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                className="rounded-full border border-slate-200 bg-slate-100 px-3 py-2 text-sm text-slate-700 hover:bg-slate-200"
+                onClick={() => {
+                  setEditedPatientDetails({
+                    name: location.state.rowdata.name,
+                    contact_no: location.state.rowdata.contact_no,
+                    location: location.state.rowdata.location,
+                    gender: location.state.rowdata.gender,
+                    patient_age: location.state.rowdata.patient_age,
+                  });
+                  setEditedPatientDetailsError({
+                    name: false, nameErr: "",
+                    contact_no: false, contact_noErr: "",
+                    location: false, locationErr: "",
+                    gender: false, genderErr: "",
+                  });
+                  setActiveEditDetails(true);
+                }}
+              >
+                Edit Details
+              </button>
+              <button
+                type="button"
+                className="rounded-full border border-slate-200 bg-slate-100 px-3 py-2 text-sm text-slate-700 hover:bg-slate-200"
+                onClick={() => {
+                  setEditedData({ date: new Date().toISOString().split("T")[0], symptoms: "", medicines: "", pathology_report: "" });
+                  setActiveAdd(true);
+                }}
+              >
+                Add New Details
+              </button>
+            </div>
+          </div>
+        </section>
         {patientData.length == 0 ? (
           <div className="flex-horizon">
             <img alt="nodata pic" src="nodata.png" className="fallback-pic" />
           </div>
         ) : (
-          <div className="p25">
-            {/* <Scrollable shadow> */}
-            {/* <Card> */}
-            <DataTable
-              columnContentTypes={["text", "text", "text", "text"]}
-              headings={["Date", "Symptoms", "Medicines","Fee", "Actions"]}
-              rows={patientData}
-            />
-            {/* </Card> */}
-            {/* </Scrollable> */}
+          <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-slate-200 text-sm">
+                <thead className="bg-slate-50 text-slate-600">
+                  <tr>
+                    <th className="px-4 py-3 text-left">Date</th>
+                    <th className="px-4 py-3 text-left">Symptoms</th>
+                    <th className="px-4 py-3 text-left">Medicines</th>
+                    <th className="px-4 py-3 text-left">Fee</th>
+                    <th className="px-4 py-3 text-left">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-200">
+                  {patientData.map((row, rowIndex) => (
+                    <tr key={rowIndex} className="hover:bg-slate-50">
+                      {row.map((cell, cellIndex) => (
+                        <td key={cellIndex} className="px-4 py-4 align-top">
+                          {cell}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
-      </Page>
+      </div>
 
-      <div style={{ height: "500px" }}>
-        <Modal
-          // activator={activator}
-          open={activeAdd}
-          onClose={() => setActiveAdd(!activeAdd)}
-          title="Add somthing today"
-          primaryAction={{
-            content: "Add",
-            onAction: () => onSubmitAddedData(),
-          }}
-          secondaryActions={{
-            content: "Close",
-            onAction: () => setActiveAdd(!activeAdd),
-          }}
-        >
-          <Modal.Section>
-            <LegacyStack vertical>
-              <LegacyStack.Item>
-                <TextContainer>
-                  <p>You can edit here.</p>
-                  <TextField
-                    label="Enter Date"
-                    value={editedData.date}
-                    error={editedDataError.dateErr}
-                    onChange={handleDateChange}
-                    type="date"
-                    helpText={
-                      <span style={{ color: "red" }}>
-                        {editedDataError.date}
-                      </span>
-                    }
-                  />
-                  <TextField
-                    label="Enter Fee"
-                    value={editedData.fee}
-                    onChange={handleFeeChange}
-                    type="text"
-                  />
-                  <TextField
-                    label="Enter New Pathology Report"
-                    value={editedData.pathology_report}
-                    onChange={handlePathologyReportChange}
-                    type="text"
-                    multiline={3}
-                  />
-                  <MedicineField
-                    label="Enter patient's symptoms"
-                    error={editedDataError.symptomsErr}
-                    value={editedData.symptoms}
-                    onChange={handleSymptomsChange}
-                    data={homeopathySymptoms}
-                    customData={contxt.customSuggestions.symptoms}
-                    helpText={
-                      <span style={{ color: "red" }}>
-                        {editedDataError.symptoms}
-                      </span>
-                    }
-                  />
-                  <MedicineField
-                    label="Enter patient's medicines"
-                    value={editedData.medicines}
-                    error={editedDataError.medicinesErr}
-                    onChange={handleMedicinesChange}
-                    customData={contxt.customSuggestions.medicines}
-                    helpText={
-                      <span style={{ color: "red" }}>
-                        {editedDataError.medicines}
-                      </span>
-                    }
-                  />
-                </TextContainer>
-              </LegacyStack.Item>
-            </LegacyStack>
-          </Modal.Section>
-        </Modal>
-      </div>
-      <div style={{ height: "500px" }}>
-        <Modal
-          // activator={activator}
-          open={activeEdit}
-          onClose={() => setActiveEdit(!activeEdit)}
-          title="Get a shareable link"
-          primaryAction={{
-            content: "Edit",
-            onAction: () => onSubmitEditedData(),
-          }}
-          secondaryActions={{
-            content: "Close",
-            onAction: () => setActiveEdit(!activeEdit),
-          }}
-        >
-          <Modal.Section>
-            <LegacyStack vertical>
-              <LegacyStack.Item>
-                <TextContainer>
-                  <p>You can edit here.</p>
-                  <TextField
-                    label="Enter Date"
-                    value={editedData.date}
-                    error={editedDataError.dateErr}
-                    onChange={handleDateChange}
-                    type="date"
-                    helpText={
-                      <span style={{ color: "red" }}>
-                        {editedDataError.date}
-                      </span>
-                    }
-                  />
-                  <TextField
-                    label="Enter Pathology Report"
-                    value={editedData.pathology_report}
-                    onChange={handlePathologyReportChange}
-                    type="text"
-                    multiline={3}
-                  />
-                  <TextField
-                    label="Enter Fee"
-                    value={editedData.fee}
-                    onChange={handleFeeChange}
-                    type="text"
-                  />
-                  <MedicineField
-                    label="Enter patient's symptoms"
-                    error={editedDataError.symptomsErr}
-                    value={editedData.symptoms}
-                    onChange={handleSymptomsChange}
-                    data={homeopathySymptoms}
-                    customData={contxt.customSuggestions.symptoms}
-                    helpText={
-                      <span style={{ color: "red" }}>
-                        {editedDataError.symptoms}
-                      </span>
-                    }
-                  />
-                  <MedicineField
-                    label="Enter patient's medicines"
-                    value={editedData.medicines}
-                    error={editedDataError.medicinesErr}
-                    onChange={handleMedicinesChange}
-                    customData={contxt.customSuggestions.medicines}
-                    helpText={
-                      <span style={{ color: "red" }}>
-                        {editedDataError.medicines}
-                      </span>
-                    }
-                  />
-                </TextContainer>
-              </LegacyStack.Item>
-            </LegacyStack>
-          </Modal.Section>
-        </Modal>
-      </div>
-      <div style={{ height: "200px" }}>
-        <Modal
-          // activator={activator}
-          open={activeDel}
-          onClose={() => setActiveDel(!activeDel)}
-          title="Alert! "
-          primaryAction={{
-            content: "Delete",
-            onAction: () => onDeleteData(),
-          }}
-          secondaryActions={{
-            content: "Cancel",
-            onAction: () => setActiveDel(!activeDel),
-          }}
-        >
-          <Modal.Section>
-            <LegacyStack vertical>
-              <LegacyStack.Item>
-                <TextContainer>
-                  <p>
-                    Do you really want to delete this? Because this action
-                    cannot be revert!
-                  </p>
-                </TextContainer>
-              </LegacyStack.Item>
-            </LegacyStack>
-          </Modal.Section>
-        </Modal>
-      </div>
-      <div style={{ height: "500px" }}>
-        <Modal
-          open={activeEditDetails}
-          onClose={() => setActiveEditDetails(false)}
-          title="Edit Patient Details"
-          primaryAction={{
-            content: "Save",
-            onAction: () => onSubmitEditedPatientDetails(),
-          }}
-          secondaryActions={{
-            content: "Cancel",
-            onAction: () => setActiveEditDetails(false),
-          }}
-        >
-          <Modal.Section>
-            <LegacyStack vertical>
-              <LegacyStack.Item>
-                <TextContainer>
-                  <TextField
-                    label="Name"
-                    value={editedPatientDetails.name}
-                    error={editedPatientDetailsError.name}
-                    onChange={handlePatientNameChange}
-                    helpText={
-                      <span style={{ color: "red" }}>
-                        {editedPatientDetailsError.nameErr}
-                      </span>
-                    }
-                  />
-                  <TextField
-                    label="Mobile No."
-                    value={editedPatientDetails.contact_no}
-                    error={editedPatientDetailsError.contact_no}
-                    onChange={handlePatientContactChange}
-                    helpText={
-                      <span style={{ color: "red" }}>
-                        {editedPatientDetailsError.contact_noErr}
-                      </span>
-                    }
-                  />
-                  <TextField
-                    label="Age"
-                    value={editedPatientDetails.patient_age}
-                    onChange={handlePatientAgeChange}                  
-                  />
-                  <TextField
-                    label="Location"
-                    value={editedPatientDetails.location}
-                    error={editedPatientDetailsError.location}
-                    onChange={handlePatientLocationChange}
-                    helpText={
-                      <span style={{ color: "red" }}>
-                        {editedPatientDetailsError.locationErr}
-                      </span>
-                    }
-                  />
-                  <TextField
-                    label="Gender"
-                    value={editedPatientDetails.gender}
-                    error={editedPatientDetailsError.gender}
-                    onChange={handlePatientGenderChange}
-                    helpText={
-                      <span style={{ color: "red" }}>
-                        {editedPatientDetailsError.genderErr}
-                      </span>
-                    }
-                  />
-                </TextContainer>
-              </LegacyStack.Item>
-            </LegacyStack>
-          </Modal.Section>
-        </Modal>
-      </div>
+      {activeAdd && (
+        <div className="modal-overlay">
+          <div className="modal-panel">
+            <h2 className="text-lg font-semibold text-slate-900">Add something today</h2>
+            <p className="mt-4 text-sm text-slate-600">You can edit here.</p>
+            <div className="mt-4 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700">Enter Date</label>
+                <input
+                  type="date"
+                  value={editedData.date}
+                  onChange={(e) => handleDateChange(e.target.value)}
+                  className="input-base mt-2"
+                />
+                {editedDataError.dateErr && (
+                  <p className="mt-1 text-sm text-red-600">{editedDataError.date}</p>
+                )}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700">Enter Fee</label>
+                <input
+                  type="text"
+                  value={editedData.fee}
+                  onChange={(e) => handleFeeChange(e.target.value)}
+                  className="input-base mt-2"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700">Enter New Pathology Report</label>
+                <input
+                  type="text"
+                  value={editedData.pathology_report}
+                  onChange={(e) => handlePathologyReportChange(e.target.value)}
+                  className="input-base mt-2"
+                />
+              </div>
+              <MedicineField
+                label="Enter patient's symptoms"
+                error={editedDataError.symptomsErr}
+                value={editedData.symptoms}
+                onChange={handleSymptomsChange}
+                data={homeopathySymptoms}
+                customData={contxt.customSuggestions.symptoms}
+                helpText={
+                  <span className="text-red-600">{editedDataError.symptoms}</span>
+                }
+              />
+              <MedicineField
+                label="Enter patient's medicines"
+                value={editedData.medicines}
+                error={editedDataError.medicinesErr}
+                onChange={handleMedicinesChange}
+                customData={contxt.customSuggestions.medicines}
+                helpText={
+                  <span className="text-red-600">{editedDataError.medicines}</span>
+                }
+              />
+            </div>
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                type="button"
+                className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                onClick={() => setActiveAdd(false)}
+              >
+                Close
+              </button>
+              <button
+                type="button"
+                className="rounded-full bg-sky-600 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-700"
+                onClick={onSubmitAddedData}
+              >
+                Add
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {activeEdit && (
+        <div className="modal-overlay">
+          <div className="modal-panel">
+            <h2 className="text-lg font-semibold text-slate-900">Edit record</h2>
+            <p className="mt-2 text-sm text-slate-600">Update the selected entry details below.</p>
+            <div className="mt-4 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700">Enter Date</label>
+                <input
+                  type="date"
+                  value={editedData.date}
+                  onChange={(e) => handleDateChange(e.target.value)}
+                  className="input-base mt-2"
+                />
+                {editedDataError.dateErr && (
+                  <p className="mt-1 text-sm text-red-600">{editedDataError.date}</p>
+                )}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700">Pathology Report</label>
+                <input
+                  type="text"
+                  value={editedData.pathology_report}
+                  onChange={(e) => handlePathologyReportChange(e.target.value)}
+                  className="input-base mt-2"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700">Fee</label>
+                <input
+                  type="text"
+                  value={editedData.fee}
+                  onChange={(e) => handleFeeChange(e.target.value)}
+                  className="input-base mt-2"
+                />
+              </div>
+              <MedicineField
+                label="Symptoms"
+                error={editedDataError.symptomsErr}
+                value={editedData.symptoms}
+                onChange={handleSymptomsChange}
+                data={homeopathySymptoms}
+                customData={contxt.customSuggestions.symptoms}
+                helpText={
+                  <span className="text-red-600">{editedDataError.symptoms}</span>
+                }
+              />
+              <MedicineField
+                label="Medicines"
+                value={editedData.medicines}
+                error={editedDataError.medicinesErr}
+                onChange={handleMedicinesChange}
+                customData={contxt.customSuggestions.medicines}
+                helpText={
+                  <span className="text-red-600">{editedDataError.medicines}</span>
+                }
+              />
+            </div>
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                type="button"
+                className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                onClick={() => setActiveEdit(false)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="rounded-full bg-sky-600 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-700"
+                onClick={onSubmitEditedData}
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {activeDel && (
+        <div className="modal-overlay">
+          <div className="modal-panel max-w-md">
+            <h2 className="text-lg font-semibold text-slate-900">Delete record</h2>
+            <p className="mt-2 text-sm text-slate-600">Do you really want to delete this? This action cannot be undone.</p>
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                type="button"
+                className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                onClick={() => setActiveDel(false)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="rounded-full bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700"
+                onClick={onDeleteData}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {activeEditDetails && (
+        <div className="modal-overlay">
+          <div className="modal-panel max-w-xl">
+            <h2 className="text-lg font-semibold text-slate-900">Edit Patient Details</h2>
+            <p className="mt-2 text-sm text-slate-600">Update the patient information and save the changes.</p>
+            <div className="mt-4 grid gap-4 md:grid-cols-2">
+              <div>
+                <label className="block text-sm font-medium text-slate-700">Name</label>
+                <input
+                  type="text"
+                  value={editedPatientDetails.name}
+                  onChange={(e) => handlePatientNameChange(e.target.value)}
+                  className="input-base mt-2"
+                />
+                {editedPatientDetailsError.nameErr && (
+                  <p className="mt-1 text-sm text-red-600">{editedPatientDetailsError.nameErr}</p>
+                )}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700">Mobile No.</label>
+                <input
+                  type="text"
+                  value={editedPatientDetails.contact_no}
+                  onChange={(e) => handlePatientContactChange(e.target.value)}
+                  className="input-base mt-2"
+                />
+                {editedPatientDetailsError.contact_noErr && (
+                  <p className="mt-1 text-sm text-red-600">{editedPatientDetailsError.contact_noErr}</p>
+                )}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700">Age</label>
+                <input
+                  type="text"
+                  value={editedPatientDetails.patient_age}
+                  onChange={(e) => handlePatientAgeChange(e.target.value)}
+                  className="input-base mt-2"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700">Location</label>
+                <input
+                  type="text"
+                  value={editedPatientDetails.location}
+                  onChange={(e) => handlePatientLocationChange(e.target.value)}
+                  className="input-base mt-2"
+                />
+                {editedPatientDetailsError.locationErr && (
+                  <p className="mt-1 text-sm text-red-600">{editedPatientDetailsError.locationErr}</p>
+                )}
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-slate-700">Gender</label>
+                <input
+                  type="text"
+                  value={editedPatientDetails.gender}
+                  onChange={(e) => handlePatientGenderChange(e.target.value)}
+                  className="input-base mt-2"
+                />
+                {editedPatientDetailsError.genderErr && (
+                  <p className="mt-1 text-sm text-red-600">{editedPatientDetailsError.genderErr}</p>
+                )}
+              </div>
+            </div>
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                type="button"
+                className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                onClick={() => setActiveEditDetails(false)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="rounded-full bg-sky-600 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-700"
+                onClick={onSubmitEditedPatientDetails}
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { Card, Button, Banner, Modal, LegacyStack, TextContainer, TextField } from "@shopify/polaris";
 import { contxtname } from "../../../Context/appcontext";
 
 const Settings = () => {
@@ -76,74 +75,120 @@ const Settings = () => {
   };
 
   const renderSuggestionCard = (title, category, field) => (
-    <Card title={title} sectioned>
-      <LegacyStack vertical spacing="loose">
-        <div style={{ display: "flex", gap: "8px", alignItems: "flex-end" }}>
-          <div style={{ flex: 1 }}>
-            <TextField
-              label={`Naya ${title.toLowerCase()} add karein`}
-              value={newItem[field]}
-              onChange={(v) => setNewItem({ ...newItem, [field]: v })}
-              autoComplete="off"
-              onKeyPress={(e) => { if (e.key === "Enter") handleAddSuggestion(category, field); }}
-            />
-          </div>
-          <Button onClick={() => handleAddSuggestion(category, field)}>Add</Button>
+    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="mb-4 flex items-center justify-between">
+        <h2 className="text-base font-semibold">{title}</h2>
+      </div>
+      <div className="space-y-4">
+        <div className="flex flex-col gap-3 md:flex-row md:items-end">
+          <label className="sr-only">Add new {title.toLowerCase()}</label>
+          <input
+            type="text"
+            value={newItem[field]}
+            onChange={(e) => setNewItem({ ...newItem, [field]: e.target.value })}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                handleAddSuggestion(category, field);
+              }
+            }}
+            placeholder={`Naya ${title.toLowerCase()} add karein`}
+            className="input-base w-full md:flex-1"
+          />
+          <button
+            type="button"
+            className="rounded-full bg-sky-600 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-700"
+            onClick={() => handleAddSuggestion(category, field)}
+          >
+            Add
+          </button>
         </div>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+        <div className="flex flex-wrap gap-2">
           {contxt.customSuggestions[category].length === 0 ? (
-            <p style={{ color: "#6d7175", fontSize: "13px" }}>Abhi koi custom entry nahi hai.</p>
+            <p className="text-sm text-slate-500">Abhi koi custom entry nahi hai.</p>
           ) : (
             contxt.customSuggestions[category].map((item, i) => (
               <span key={i} style={chipStyle}>
                 {item}
-                <button style={deleteBtn} onClick={() => handleDeleteSuggestion(category, i)}>×</button>
+                <button style={deleteBtn} onClick={() => handleDeleteSuggestion(category, i)}>
+                  ×
+                </button>
               </span>
             ))
           )}
         </div>
-      </LegacyStack>
-    </Card>
+      </div>
+    </div>
   );
 
   return (
-    <div className="container p25">
+    <div className="container p25 flex flex-col gap-5">
       <h1 className="page-heading">Settings</h1>
       {message.msg && (
-        <Banner status={message.type} onDismiss={() => setMessage({ msg: "", type: "success" })}>
+        <div className={`mb-5 rounded-2xl border px-4 py-3 text-sm ${message.type === "critical" ? "border-red-200 bg-red-50 text-red-700" : "border-emerald-200 bg-emerald-50 text-emerald-700"}`}>
           {message.msg}
-        </Banner>
+          <button
+            type="button"
+            className="ml-4 font-semibold"
+            onClick={() => setMessage({ msg: "", type: "success" })}
+          >
+            Dismiss
+          </button>
+        </div>
       )}
-      <Card title="Data Backup" sectioned>
-        <LegacyStack vertical spacing="loose">
-          <TextContainer>
-            <p>Export all patient and user data to a JSON file. Save to USB, Google Drive, or any location.</p>
-          </TextContainer>
-          <Button onClick={handleExport}>Export Data</Button>
-        </LegacyStack>
-      </Card>
-      <Card title="Data Import" sectioned>
-        <LegacyStack vertical spacing="loose">
-          <TextContainer>
-            <p><strong>Warning:</strong> Importing will replace ALL current data and log out all users. Export first as a backup.</p>
-          </TextContainer>
-          <Button destructive onClick={() => setShowImportConfirm(true)}>Import Data</Button>
-        </LegacyStack>
-      </Card>
+      <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+        <h2 className="text-base font-semibold">Data Backup</h2>
+        <p className="mt-2 text-sm text-slate-600">Export all patient and user data to a JSON file. Save to USB, Google Drive, or any location.</p>
+        <button
+          type="button"
+          className="mt-4 rounded-full bg-sky-600 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-700"
+          onClick={handleExport}
+        >
+          Export Data
+        </button>
+      </section>
+      <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+        <h2 className="text-base font-semibold">Data Import</h2>
+        <p className="mt-2 text-sm text-slate-600"><strong>Warning:</strong> Importing will replace ALL current data and log out all users. Export first as a backup.</p>
+        <button
+          type="button"
+          className="mt-4 rounded-full bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700"
+          onClick={() => setShowImportConfirm(true)}
+        >
+          Import Data
+        </button>
+      </section>
 
       {renderSuggestionCard("Custom Medicines", "medicines", "medicine")}
       {renderSuggestionCard("Custom Symptoms", "symptoms", "symptom")}
       {renderSuggestionCard("Custom Diseases", "diseases", "disease")}
 
-      <Modal open={showImportConfirm} onClose={() => setShowImportConfirm(false)} title="Confirm Import"
-        primaryAction={{ content: "Yes, Import & Logout", destructive: true, onAction: handleImportConfirm }}
-        secondaryActions={[{ content: "Cancel", onAction: () => setShowImportConfirm(false) }]}>
-        <Modal.Section>
-          <TextContainer>
-            <p>Ye action poora data replace karega aur sabko logout kar dega. Kya aap sure hain? Pehle Export karke backup le lein.</p>
-          </TextContainer>
-        </Modal.Section>
-      </Modal>
+      {showImportConfirm && (
+        <div className="modal-overlay">
+          <div className="modal-panel">
+            <h2 className="text-lg font-semibold text-slate-900">Confirm Import</h2>
+            <p className="mt-4 text-sm text-slate-600">
+              Ye action poora data replace karega aur sabko logout kar dega. Kya aap sure hain? Pehle Export karke backup le lein.
+            </p>
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                type="button"
+                className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                onClick={() => setShowImportConfirm(false)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="rounded-full bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700"
+                onClick={handleImportConfirm}
+              >
+                Yes, Import & Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

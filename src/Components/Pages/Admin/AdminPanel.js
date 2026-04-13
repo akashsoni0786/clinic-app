@@ -1,8 +1,4 @@
 import React, { useState, useEffect } from "react";
-import {
-  Card, DataTable, Button, Modal, Form, FormLayout,
-  TextField, Select, Banner
-} from "@shopify/polaris";
 import { contxtname } from "../../../Context/appcontext";
 
 const AdminPanel = () => {
@@ -65,70 +61,183 @@ const AdminPanel = () => {
     setFeedback({ msg: "Password changed successfully.", type: "success" });
   };
 
-  const rows = users.map((u) => [
-    u.name,
-    u.username,
-    u.role,
-    <div key={u.id} style={{ display: "flex", gap: "8px" }}>
-      <Button size="slim" onClick={() => { setChangePwdUserId(u.id); setShowChangePwd(true); }}>
-        Change Password
-      </Button>
-      <Button
-        size="slim"
-        destructive
-        disabled={u.id === currentUserId}
-        onClick={() => handleDelete(u.id)}
-      >
-        Delete
-      </Button>
-    </div>,
-  ]);
-
   return (
     <div className="container p25">
-      <div className="form-horizon-btw" style={{ marginBottom: "20px" }}>
+      <div className="form-horizon-btw mb-5">
         <h1 className="page-heading">User Management</h1>
-        <Button primary onClick={() => setShowAdd(true)}>Add User</Button>
+        <button
+          type="button"
+          className="rounded-full bg-sky-600 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-700"
+          onClick={() => setShowAdd(true)}
+        >
+          Add User
+        </button>
       </div>
       {feedback.msg && (
-        <Banner status={feedback.type} onDismiss={() => setFeedback({ msg: "", type: "success" })}>
+        <div className={`mb-5 rounded-2xl border px-4 py-3 text-sm ${feedback.type === 'critical' ? 'border-red-200 bg-red-50 text-red-700' : 'border-emerald-200 bg-emerald-50 text-emerald-700'}`}>
           {feedback.msg}
-        </Banner>
+          <button
+            type="button"
+            className="ml-4 font-semibold"
+            onClick={() => setFeedback({ msg: "", type: "success" })}
+          >
+            Dismiss
+          </button>
+        </div>
       )}
-      <Card>
-        <DataTable
-          columnContentTypes={["text", "text", "text", "text"]}
-          headings={["Name", "Username", "Role", "Actions"]}
-          rows={rows}
-        />
-      </Card>
+      <div className="overflow-x-auto rounded-3xl border border-slate-200 bg-white shadow-sm">
+        <table className="min-w-full divide-y divide-slate-200 text-sm">
+          <thead className="bg-slate-50 text-slate-600">
+            <tr>
+              <th className="px-4 py-3 text-left">Name</th>
+              <th className="px-4 py-3 text-left">Username</th>
+              <th className="px-4 py-3 text-left">Role</th>
+              <th className="px-4 py-3 text-left">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-200">
+            {users.map((u) => (
+              <tr key={u.id} className="hover:bg-slate-50">
+                <td className="px-4 py-4">{u.name}</td>
+                <td className="px-4 py-4">{u.username}</td>
+                <td className="px-4 py-4">{u.role}</td>
+                <td className="px-4 py-4 space-x-2">
+                  <button
+                    type="button"
+                    className="rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-sm text-slate-700 hover:bg-slate-200"
+                    onClick={() => {
+                      setChangePwdUserId(u.id);
+                      setNewPwd("");
+                      setChangePwdError("");
+                      setShowChangePwd(true);
+                    }}
+                  >
+                    Change Password
+                  </button>
+                  <button
+                    type="button"
+                    className="rounded-full border border-red-200 bg-red-50 px-3 py-1 text-sm text-red-700 hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
+                    disabled={u.id === currentUserId}
+                    onClick={() => handleDelete(u.id)}
+                  >
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            ))}
+            {users.length === 0 && (
+              <tr>
+                <td colSpan={4} className="px-4 py-6 text-center text-slate-500">
+                  No users found.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
 
-      <Modal open={showAdd} onClose={() => setShowAdd(false)} title="Add New User"
-        primaryAction={{ content: "Add", onAction: handleAddUser }}
-        secondaryActions={[{ content: "Cancel", onAction: () => setShowAdd(false) }]}>
-        <Modal.Section>
-          {addError && <Banner status="critical">{addError}</Banner>}
-          <Form>
-            <FormLayout>
-              <TextField label="Full Name" value={newName} onChange={setNewName} autoComplete="off" />
-              <TextField label="Username" value={newUsername} onChange={setNewUsername} autoComplete="off" />
-              <TextField label="Password" value={newPassword} onChange={setNewPassword} type="password" autoComplete="new-password" />
-              <Select label="Role"
-                options={[{ label: "Staff", value: "staff" }, { label: "Admin", value: "admin" }]}
-                value={newRole} onChange={setNewRole} />
-            </FormLayout>
-          </Form>
-        </Modal.Section>
-      </Modal>
+      {showAdd && (
+        <div className="modal-overlay">
+          <div className="modal-panel">
+            <h2 className="text-lg font-semibold text-slate-900">Add New User</h2>
+            {addError && <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{addError}</div>}
+            <div className="mt-4 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700">Full Name</label>
+                <input
+                  type="text"
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                  className="input-base mt-2"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700">Username</label>
+                <input
+                  type="text"
+                  value={newUsername}
+                  onChange={(e) => setNewUsername(e.target.value)}
+                  className="input-base mt-2"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700">Password</label>
+                <input
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="input-base mt-2"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700">Role</label>
+                <select
+                  value={newRole}
+                  onChange={(e) => setNewRole(e.target.value)}
+                  className="input-base mt-2"
+                >
+                  <option value="staff">Staff</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+            </div>
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                type="button"
+                className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                onClick={() => setShowAdd(false)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="rounded-full bg-sky-600 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-700"
+                onClick={handleAddUser}
+              >
+                Add
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
-      <Modal open={showChangePwd} onClose={() => setShowChangePwd(false)} title="Change Password"
-        primaryAction={{ content: "Save", onAction: handleChangePassword }}
-        secondaryActions={[{ content: "Cancel", onAction: () => setShowChangePwd(false) }]}>
-        <Modal.Section>
-          {changePwdError && <Banner status="critical">{changePwdError}</Banner>}
-          <TextField label="New Password" value={newPwd} onChange={setNewPwd} type="password" autoComplete="new-password" />
-        </Modal.Section>
-      </Modal>
+      {showChangePwd && (
+        <div className="modal-overlay">
+          <div className="modal-panel">
+            <h2 className="text-lg font-semibold text-slate-900">Change Password</h2>
+            {changePwdError && (
+              <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                {changePwdError}
+              </div>
+            )}
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-slate-700">New Password</label>
+              <input
+                type="password"
+                value={newPwd}
+                onChange={(e) => setNewPwd(e.target.value)}
+                className="input-base mt-2"
+              />
+            </div>
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                type="button"
+                className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                onClick={() => setShowChangePwd(false)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="rounded-full bg-sky-600 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-700"
+                onClick={handleChangePassword}
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

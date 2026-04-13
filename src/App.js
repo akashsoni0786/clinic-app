@@ -5,7 +5,6 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import Panel from "./Panel";
 import { contxtname } from "./Context/appcontext";
 import React, { useEffect, useState } from "react";
-import { Spinner } from "@shopify/polaris";
 
 function App() {
   const contxt = React.useContext(contxtname);
@@ -19,8 +18,8 @@ function App() {
 
   if (isFirstRun === null) {
     return (
-      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
-        <Spinner accessibilityLabel="Loading" size="large" />
+      <div className="flex h-screen items-center justify-center">
+        <div className="spinner" aria-label="Loading" />
       </div>
     );
   }

@@ -1,37 +1,22 @@
-import {
-  Card,
-  DataTable,
-  Scrollable,
-  Autocomplete,
-  Icon,
-  Button,
-  Modal,
-  LegacyStack,
-  TextContainer,
-} from "@shopify/polaris";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { SearchMinor} from "@shopify/polaris-icons";
-import { contxtname } from "../../../Context/appcontext";
-import { useNavigate } from "react-router-dom";
+import React from "react";
+
 const Home = () => {
-  const navigate = useNavigate();
-
-
   return (
     <div className="container">
       <div className="form-horizon-btw p25">
         <div className="form-horizon-start">
-          <img alt="history pic" src="home.png" className="patient-pic" />
+          <img alt="home pic" src="home.png" className="patient-pic" />
           <h1 className="page-heading">My clinic</h1>
         </div>
-        
       </div>
       <div className="p25">
-        <>
-         
-        </>
+        <div className="card-base p-6">
+          <h2 className="text-xl font-semibold text-slate-900">Welcome to MediTrack</h2>
+          <p className="mt-3 text-slate-600">
+            Use the navigation above to add patients, view history, and manage your clinic data.
+          </p>
+        </div>
       </div>
-     
     </div>
   );
 };
