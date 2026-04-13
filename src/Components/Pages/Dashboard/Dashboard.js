@@ -187,8 +187,8 @@ const Dashboard = () => {
         </div>
       </div>
 
-      <div className="mt-6 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm px-5">
-        <div className="grid gap-4 xl:grid-cols-[0.95fr_0.45fr]">
+      <div className="mt-6 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm mx-5">
+        <div className="grid gap-4 xl:grid-cols-[0.95fr_0.45fr] ">
           <section>
             <div className="form-horizon-btw">
               <div>
