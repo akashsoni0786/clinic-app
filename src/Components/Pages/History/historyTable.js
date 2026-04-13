@@ -8,6 +8,7 @@ const HistoryTable = () => {
   const [activeDel, setActiveDel] = useState(false);
   const [inputValue, setInputValue] = useState("");
   const [dateFilter, setDateFilter] = useState("");
+  const [expandedDates, setExpandedDates] = useState({});
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -29,15 +30,42 @@ const HistoryTable = () => {
 
   const filteredPatients = useMemo(() => {
     const list = contxt.patientList ?? [];
-    return [...list].reverse().filter((patient) => {
-      const matchesSearch =
-        !inputValue ||
-        patient.name.toLowerCase().includes(inputValue.toLowerCase()) ||
-        patient.id.includes(inputValue);
-      const matchesDate = !dateFilter || patient.date === dateFilter;
-      return matchesSearch && matchesDate;
-    });
+    return [...list]
+      .reverse()
+      .filter((patient) => {
+        const matchesSearch =
+          !inputValue ||
+          patient.name.toLowerCase().includes(inputValue.toLowerCase()) ||
+          patient.id.includes(inputValue);
+        const matchesDate = !dateFilter || patient.date === dateFilter;
+        return matchesSearch && matchesDate;
+      });
   }, [contxt.patientList, inputValue, dateFilter]);
+
+  const groupedPatients = useMemo(() => {
+    return filteredPatients.reduce((groups, patient) => {
+      const dateKey = patient.date || "Unknown date";
+      if (!groups[dateKey]) groups[dateKey] = [];
+      groups[dateKey].push(patient);
+      return groups;
+    }, {});
+  }, [filteredPatients]);
+
+  const dateGroups = useMemo(() => {
+    return Object.keys(groupedPatients)
+      .sort((a, b) => (a < b ? 1 : -1))
+      .map((date) => ({ date, rows: groupedPatients[date] }));
+  }, [groupedPatients]);
+
+  const toggleDateGroup = (date) => {
+    setExpandedDates((current) => ({
+      ...current,
+      [date]: !current[date],
+    }));
+  };
+
+  const isDateExpanded = (date) =>
+    expandedDates[date] !== undefined ? expandedDates[date] : true;
 
   const onDeleteData = async () => {
     try {
@@ -59,26 +87,26 @@ const HistoryTable = () => {
           <img alt="history pic" src="history.png" className="patient-pic" />
           <h1 className="page-heading">History of Patients</h1>
         </div>
-        <div className="form-horizon child-mar-15 flex-wrap gap-3">
+        <div className="form-horizon flex gap-1">
           <input
             type="search"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             placeholder="Search by name or registration no."
-            className="input-base w-full max-w-sm"
+            className="input-base w-full max-w-sm h-10"
           />
           <input
             type="date"
             value={dateFilter}
             onChange={(e) => setDateFilter(e.target.value)}
-            className="input-base max-w-[220px]"
+            className="input-base max-w-[220px] h-10"
           />
           <button
             type="button"
-            className="rounded-full border border-slate-200 bg-slate-100 px-4 py-2 text-sm text-slate-700 hover:bg-slate-200"
+            className="rounded-full w-[max-content] border border-slate-200 bg-slate-100 px-4 py-2 text-sm text-slate-700 hover:bg-slate-200"
             onClick={() => setDateFilter("")}
           >
-            Clear filter
+            Clear
           </button>
         </div>
       </div>
@@ -94,46 +122,73 @@ const HistoryTable = () => {
               <th className="px-4 py-3">Action</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-200 text-sm">
-            {filteredPatients.map((rowdata) => (
-              <tr key={rowdata.id} className="hover:bg-slate-50">
-                <td className="px-4 py-3 text-sky-700 font-semibold">
-                  <button
-                    type="button"
-                    className="text-left text-sm font-medium text-sky-600 hover:underline"
-                    onClick={() => navigate("/patientdetails", { state: { rowdata } })}
-                  >
-                    {rowdata.id}
-                  </button>
-                </td>
-                <td className="px-4 py-3">{rowdata.name}</td>
-                <td className="px-4 py-3">{rowdata.date}</td>
-                <td className="px-4 py-3">{rowdata.desease}</td>
-                <td className="px-4 py-3">{rowdata.location}</td>
-                <td className="px-4 py-3">
-                  <div className="flex flex-wrap gap-2">
-                    <button
-                      type="button"
-                      className="rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-sm text-slate-700 hover:bg-slate-200"
-                      onClick={() => navigate("/patientdetails", { state: { rowdata } })}
-                    >
-                      View
-                    </button>
-                    <button
-                      type="button"
-                      className="rounded-full border border-red-200 bg-red-50 px-3 py-1 text-sm text-red-700 hover:bg-red-100"
-                      onClick={() => {
-                        setActiveDel(true);
-                        setDelId(rowdata.id);
-                      }}
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-            {filteredPatients.length === 0 && (
+          <tbody className="text-sm">
+            {dateGroups.length > 0 ? (
+              dateGroups.map(({ date, rows }) => {
+                const expanded = isDateExpanded(date);
+                return (
+                  <React.Fragment key={date}>
+                    <tr className="bg-slate-100">
+                      <td colSpan={6} className="px-4 py-3 text-sm font-semibold text-slate-700">
+                        <button
+                          type="button"
+                          className="flex w-full items-center justify-between text-left"
+                          onClick={() => toggleDateGroup(date)}
+                        >
+                          <span>
+                            {new Date(date).toLocaleDateString("en-IN", {
+                              day: "2-digit",
+                              month: "short",
+                              year: "numeric",
+                            })} ({rows.length})
+                          </span>
+                          <span className="text-slate-500">{expanded ? "−" : "+"}</span>
+                        </button>
+                      </td>
+                    </tr>
+                    {expanded &&
+                      rows.map((rowdata) => (
+                        <tr key={rowdata.id} className="hover:bg-slate-50">
+                          <td className="px-4 py-3 text-sky-700 font-semibold">
+                            <button
+                              type="button"
+                              className="text-left text-sm font-medium text-sky-600 hover:underline"
+                              onClick={() => navigate("/patientdetails", { state: { rowdata } })}
+                            >
+                              {rowdata.id}
+                            </button>
+                          </td>
+                          <td className="px-4 py-3">{rowdata.name}</td>
+                          <td className="px-4 py-3">{rowdata.date}</td>
+                          <td className="px-4 py-3">{rowdata.desease}</td>
+                          <td className="px-4 py-3">{rowdata.location}</td>
+                          <td className="px-4 py-3">
+                            <div className="flex flex-wrap gap-2">
+                              <button
+                                type="button"
+                                className="rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-sm text-slate-700 hover:bg-slate-200"
+                                onClick={() => navigate("/patientdetails", { state: { rowdata } })}
+                              >
+                                View
+                              </button>
+                              <button
+                                type="button"
+                                className="rounded-full border border-red-200 bg-red-50 px-3 py-1 text-sm text-red-700 hover:bg-red-100"
+                                onClick={() => {
+                                  setActiveDel(true);
+                                  setDelId(rowdata.id);
+                                }}
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                  </React.Fragment>
+                );
+              })
+            ) : (
               <tr>
                 <td colSpan={6} className="px-4 py-6 text-center text-slate-500">
                   No patients found.
