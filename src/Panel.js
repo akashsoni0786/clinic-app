@@ -7,6 +7,7 @@ import PatientDetails from "./Components/Pages/PatientDetails/PatientDetails";
 import PatientForm from "./Components/Pages/PatientForm/patientForm";
 import AdminPanel from "./Components/Pages/Admin/AdminPanel";
 import Settings from "./Components/Pages/Settings/Settings";
+import Dashboard from "./Components/Pages/Dashboard/Dashboard";
 import { contxtname } from "./Context/appcontext";
 
 function Panel() {
@@ -19,6 +20,7 @@ function Panel() {
   const location = useLocation();
 
   const baseTabs = [
+    { id: "dashboard", content: "Dashboard", panelID: "/dashboard" },
     { id: "history", content: "All Patients", panelID: "/history" },
     { id: "add-new-patient", content: "Add New Patient", panelID: "/patientform" },
   ];
@@ -43,7 +45,7 @@ function Panel() {
 
   useEffect(() => {
     if (location.pathname === "/" || location.pathname === "/home") {
-      navigate("/history");
+      navigate("/dashboard");
     }
   }, [location.pathname, navigate]);
 
@@ -120,8 +122,9 @@ function Panel() {
         </nav>
       <div className="container py-4">
         <Routes>
-          <Route path="/" element={<Login />} />
-          <Route path="/home" element={<Home />} />
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/home" element={<Dashboard />} />
           <Route path="/history" element={<HistoryTable />} />
           <Route path="/patientform" element={<PatientForm />} />
           <Route path="/patientdetails" element={<PatientDetails />} />
