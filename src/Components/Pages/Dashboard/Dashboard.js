@@ -6,6 +6,8 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(false);
   const [chartStartDate, setChartStartDate] = useState("");
   const [chartEndDate, setChartEndDate] = useState("");
+  const [chartType, setChartType] = useState("column");
+  const [metricFilter, setMetricFilter] = useState("earnings");
 
   useEffect(() => {
     if (!contxt.patientList?.length) {
@@ -152,6 +154,203 @@ const Dashboard = () => {
     return ids.size;
   }, [contxt.patientList, chartStartDate, chartEndDate]);
 
+  const patientTrendByDate = useMemo(() => {
+    const totals = {};
+    const start = chartStartDate ? new Date(chartStartDate).getTime() : null;
+    const end = chartEndDate ? new Date(chartEndDate).getTime() : null;
+
+    const addRecord = (date) => {
+      if (!date) return;
+      const time = new Date(date).getTime();
+      if (Number.isNaN(time)) return;
+      if (start && time < start) return;
+      if (end && time > end) return;
+      totals[date] = (totals[date] || 0) + 1;
+    };
+
+    (contxt.patientList ?? []).forEach((patient) => {
+      addRecord(patient.date);
+      if (Array.isArray(patient.dateWiseData)) {
+        patient.dateWiseData.forEach((entry) => addRecord(entry.todaydate || patient.date));
+      }
+    });
+
+    return Object.keys(totals)
+      .sort((a, b) => new Date(a) - new Date(b))
+      .map((date) => ({ date, count: totals[date] }));
+  }, [contxt.patientList, chartStartDate, chartEndDate]);
+
+  const patientTrendMax = Math.max(...patientTrendByDate.map((item) => item.count), 1);
+
+  const patientRegistrationsByDate = useMemo(() => {
+    const totals = {};
+    const start = chartStartDate ? new Date(chartStartDate).getTime() : null;
+    const end = chartEndDate ? new Date(chartEndDate).getTime() : null;
+
+    (contxt.patientList ?? []).forEach((patient) => {
+      const date = patient.date;
+      if (!date) return;
+      const time = new Date(date).getTime();
+      if (Number.isNaN(time)) return;
+      if (start && time < start) return;
+      if (end && time > end) return;
+      totals[date] = (totals[date] || 0) + 1;
+    });
+
+    return Object.keys(totals)
+      .sort((a, b) => new Date(a) - new Date(b))
+      .map((date) => ({ date, count: totals[date] }));
+  }, [contxt.patientList, chartStartDate, chartEndDate]);
+
+  const topDiseasesSeries = useMemo(() => {
+    return topDiseases.map((item) => ({ label: item.disease, value: item.count }));
+  }, [topDiseases]);
+
+  const activeChartData = useMemo(() => {
+    if (metricFilter === "visits") return patientTrendByDate.map((item) => ({ label: item.date, value: item.count }));
+    if (metricFilter === "patients") return patientRegistrationsByDate.map((item) => ({ label: item.date, value: item.count }));
+    if (metricFilter === "diseases") return topDiseasesSeries;
+    return chartData.map((item) => ({ label: item.date, value: item.amount }));
+  }, [metricFilter, chartData, patientTrendByDate, patientRegistrationsByDate, topDiseasesSeries]);
+
+  const activeMetricLabel = useMemo(() => {
+    if (metricFilter === "visits") return "Visits by date";
+    if (metricFilter === "patients") return "Patients registered";
+    if (metricFilter === "diseases") return "Top diseases";
+    return "Earnings by date";
+  }, [metricFilter]);
+
+  const activeChartMax = Math.max(...activeChartData.map((item) => item.value), 1);
+  const activeChartTotal = activeChartData.reduce((sum, item) => sum + item.value, 0);
+
+  const renderChart = () => {
+    if (activeChartData.length === 0) {
+      return (
+        <div className="rounded-3xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center text-sm text-slate-500">
+          No chart data available for this selection.
+        </div>
+      );
+    }
+
+    if (metricFilter === "diseases") {
+      return (
+        <div className="space-y-4">
+          {activeChartData.map((item) => {
+            const width = (item.value / activeChartMax) * 100;
+            return (
+              <div key={item.label} className="space-y-2">
+                <div className="flex items-center justify-between text-sm text-slate-700">
+                  <span>{item.label}</span>
+                  <span className="font-semibold">{item.value}</span>
+                </div>
+                <div className="h-4 overflow-hidden rounded-full bg-slate-100">
+                  <div className="h-full rounded-full bg-sky-600" style={{ width: `${width}%` }} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      );
+    }
+
+    const svgWidth = Math.max(520, activeChartData.length * 90);
+    const svgHeight = 280;
+    const chartTop = 24;
+    const chartBottom = svgHeight - 50;
+    const chartLeft = 50;
+    const chartRight = svgWidth - 20;
+    const chartHeight = chartBottom - chartTop;
+    const chartWidth = chartRight - chartLeft;
+    const barWidth = Math.min(40, chartWidth / Math.max(activeChartData.length, 1) * 0.6);
+
+    const points = activeChartData.map((item, index) => {
+      const x = chartLeft + (activeChartData.length === 1 ? chartWidth / 2 : (chartWidth / (activeChartData.length - 1)) * index);
+      const y = chartBottom - (item.value / activeChartMax) * chartHeight;
+      return { x, y, label: item.label, value: item.value };
+    });
+
+    const linePath = points.map((point, index) => `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`).join(" ");
+    const areaPath = `${linePath} L ${points[points.length - 1].x} ${chartBottom} L ${points[0].x} ${chartBottom} Z`;
+
+    return (
+      <div className="overflow-x-auto rounded-3xl border border-slate-200 bg-slate-50 p-4">
+        <div style={{ minWidth: svgWidth }}>
+          <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} className="w-full">
+            <defs>
+              <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.38" />
+                <stop offset="100%" stopColor="#38bdf8" stopOpacity="0" />
+              </linearGradient>
+            </defs>
+            <g className="stroke-slate-300" strokeWidth="1">
+              {[0, 1, 2, 3].map((index) => {
+                const y = chartTop + (chartHeight / 3) * index;
+                return <line key={index} x1={chartLeft} y1={y} x2={chartRight} y2={y} strokeDasharray="4 4" />;
+              })}
+            </g>
+            {[0, 1, 2, 3].map((index) => {
+              const value = Math.round(activeChartMax - (activeChartMax / 3) * index);
+              const y = chartTop + (chartHeight / 3) * index + 4;
+              return (
+                <text key={index} x={chartLeft - 10} y={y} textAnchor="end" fontSize="11" fill="#64748b">
+                  {value}
+                </text>
+              );
+            })}
+
+            {chartType === "area" || chartType === "series" ? (
+              <path d={areaPath} fill="url(#areaGradient)" />
+            ) : null}
+
+            {chartType !== "column" ? (
+              <path
+                d={linePath}
+                fill="none"
+                stroke="#0ea5e9"
+                strokeWidth="3"
+                strokeDasharray={chartType === "series" ? "8 6" : "0"}
+              />
+            ) : null}
+
+            {chartType === "column" &&
+              points.map((point) => {
+                const barHeight = Math.max(16, (point.value / activeChartMax) * chartHeight);
+                return (
+                  <rect
+                    key={point.label}
+                    x={point.x - barWidth / 2}
+                    y={chartBottom - barHeight}
+                    width={barWidth}
+                    height={barHeight}
+                    rx="10"
+                    fill="#0ea5e9"
+                  />
+                );
+              })}
+
+            {(chartType === "line" || chartType === "area" || chartType === "series") &&
+              points.map((point) => (
+                <circle key={point.label} cx={point.x} cy={point.y} r="4" fill="#0ea5e9" stroke="#ffffff" strokeWidth="2" />
+              ))}
+
+            {points.map((point) => (
+              <text key={`${point.label}-label`} x={point.x} y={svgHeight - 24} textAnchor="middle" fontSize="11" fill="#475569">
+                {point.label}
+              </text>
+            ))}
+
+            <line x1={chartLeft} y1={chartBottom} x2={chartRight} y2={chartBottom} stroke="#cbd5e1" strokeWidth="1" />
+          </svg>
+        </div>
+      </div>
+    );
+  };
+
+  const totalTrendDays = patientTrendByDate.length;
+  const averageDailyPatients = totalTrendDays
+    ? Math.round(patientTrendByDate.reduce((sum, item) => sum + item.count, 0) / totalTrendDays)
+    : 0;
+
   return (
     <div>
       <div className="form-horizon-btw p25">
@@ -188,15 +387,15 @@ const Dashboard = () => {
       </div>
 
       <div className="mt-6 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm mx-5">
-        <div className="grid gap-4 xl:grid-cols-[0.95fr_0.45fr] ">
+          <div className="grid gap-4 xl:grid-cols-2">
           <section>
             <div className="form-horizon-btw">
               <div>
-                <h2 className="text-lg font-semibold text-slate-900">Earnings by date</h2>
-                <p className="mt-1 text-sm text-slate-500">Use the date range to inspect daily income.</p>
+                <h2 className="text-lg font-semibold text-slate-900">{activeMetricLabel}</h2>
+                <p className="mt-1 text-sm text-slate-500">Use the date range and chart type to explore clinic data.</p>
               </div>
               <div className="text-right text-sm text-slate-500">
-                Total ₹{chartRangeTotal.toLocaleString()}
+                {metricFilter === "diseases" ? `Total ${activeChartTotal} cases` : `Total ${activeChartTotal.toLocaleString()}`}
               </div>
             </div>
             <div className="mt-5 grid gap-4 sm:grid-cols-2">
@@ -219,7 +418,33 @@ const Dashboard = () => {
                 />
               </label>
             </div>
-            <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_auto]">
+            <div className="mt-4 grid gap-3 lg:grid-cols-3">
+              <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
+                <div className="text-sm font-semibold text-slate-900">Chart metric</div>
+                <select
+                  value={metricFilter}
+                  onChange={(e) => setMetricFilter(e.target.value)}
+                  className="input-base mt-3 w-full"
+                >
+                  <option value="earnings">Earnings by date</option>
+                  <option value="visits">Visits by date</option>
+                  <option value="patients">New patients by date</option>
+                  <option value="diseases">Top diseases</option>
+                </select>
+              </div>
+              <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
+                <div className="text-sm font-semibold text-slate-900">Chart type</div>
+                <select
+                  value={chartType}
+                  onChange={(e) => setChartType(e.target.value)}
+                  className="input-base mt-3 w-full "
+                >
+                  <option value="column">Column chart</option>
+                  <option value="line">Line chart</option>
+                  <option value="area">Area chart</option>
+                  <option value="series">Series chart</option>
+                </select>
+              </div>
               <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
                 <div className="text-sm font-semibold text-slate-900">Clear filter</div>
                 <p className="mt-2 text-sm text-slate-500">
@@ -236,34 +461,21 @@ const Dashboard = () => {
                   Clear filters
                 </button>
               </div>
-              <div className="flex items-center text-sm text-slate-500">
+            </div>
+            <div className="mt-4 rounded-3xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+              <div className="font-semibold text-slate-900">Current selection</div>
+              <div className="mt-2">Metric: {activeMetricLabel}</div>
+              <div>Chart type: {chartType === "column" ? "Column chart" : chartType === "line" ? "Line chart" : chartType === "area" ? "Area chart" : "Series chart"}</div>
+            </div>
+            <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
+              <div className="text-sm text-slate-500">
                 {chartStartDate || chartEndDate
                   ? `Showing ${chartStartDate || "start"} to ${chartEndDate || "end"}`
                   : "Showing latest 7 dates"}
               </div>
+              <div className="text-sm font-medium text-slate-700">{activeMetricLabel}</div>
             </div>
-            <div className="mt-5 space-y-4">
-              {chartData.length > 0 ? (
-                chartData.map((item) => (
-                  <div key={item.date} className="space-y-2">
-                    <div className="flex items-center justify-between text-sm text-slate-700">
-                      <span>{new Date(item.date).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}</span>
-                      <span className="font-semibold">₹ {item.amount.toLocaleString()}</span>
-                    </div>
-                    <div className="h-3 overflow-hidden rounded-full bg-slate-100">
-                      <div
-                        className="h-full rounded-full bg-sky-600"
-                        style={{ width: `${(item.amount / chartMax) * 100}%` }}
-                      />
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="rounded-3xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center text-sm text-slate-500">
-                  No earnings data available for this range.
-                </div>
-              )}
-            </div>
+            <div className="mt-5">{renderChart()}</div>
           </section>
 
           <section className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
@@ -274,57 +486,84 @@ const Dashboard = () => {
                 <span className="font-semibold text-slate-900">{chartPatientCount}</span>
               </div>
               <div className="flex items-center justify-between rounded-3xl bg-white px-4 py-3">
-                <span>Daily dates shown</span>
-                <span className="font-semibold text-slate-900">{chartData.length}</span>
+                <span>Active data points</span>
+                <span className="font-semibold text-slate-900">{activeChartData.length}</span>
               </div>
             </div>
           </section>
         </div>
       </div>
 
-      <div className="mt-8 grid gap-4 xl:grid-cols-[1.3fr_0.7fr] px-5">
+      <div className="mt-8 grid gap-4 xl:grid-cols-2 px-5">
         <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="form-horizon-btw">
-            <h2 className="text-lg font-semibold text-slate-900">Recent patients</h2>
-            <span className="rounded-full bg-slate-100 px-3 py-1 text-xs uppercase tracking-[0.18em] text-slate-600">
-              Latest entries
-            </span>
+            <div>
+              <h2 className="text-lg font-semibold text-slate-900">Patient trend</h2>
+              <p className="mt-1 text-sm text-slate-500">Daily visits and consultations in the selected range.</p>
+            </div>
+            <div className="text-right text-sm text-slate-500">
+              Avg {averageDailyPatients} visits/day
+            </div>
           </div>
-
-          {loading ? (
-            <div className="mt-6 text-sm text-slate-500">Loading patient data…</div>
-          ) : recentPatients.length > 0 ? (
-            <div className="mt-6 space-y-3">
-              {recentPatients.map((patient) => (
-                <div key={patient.id} className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <p className="font-semibold text-slate-900">{patient.name || patient.id}</p>
-                    <span className="text-sm text-slate-500">{patient.date || "—"}</span>
+          {patientTrendByDate.length > 0 ? (
+            <div className="mt-6 grid gap-4">
+              {patientTrendByDate.map((item) => (
+                <div key={item.date} className="space-y-2">
+                  <div className="flex items-center justify-between text-sm text-slate-700">
+                    <span>{new Date(item.date).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}</span>
+                    <span className="font-semibold">{item.count} visits</span>
                   </div>
-                  <p className="mt-2 text-sm text-slate-600">Disease: {patient.desease || "Unknown"}</p>
-                  <p className="mt-1 text-sm text-slate-600">Fee: ₹ {Number(patient.fee || 0).toLocaleString()}</p>
+                  <div className="h-4 overflow-hidden rounded-full bg-slate-100">
+                    <div
+                      className="h-full rounded-full bg-emerald-500"
+                      style={{ width: `${(item.count / patientTrendMax) * 100}%` }}
+                    />
+                  </div>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="mt-6 text-sm text-slate-500">No recent patient records available.</div>
+            <div className="mt-6 rounded-3xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center text-sm text-slate-500">
+              No trend data available for the selected range.
+            </div>
           )}
         </section>
 
         <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="text-lg font-semibold text-slate-900">Top diseases</h2>
-          <div className="mt-5 space-y-3">
-            {topDiseases.length > 0 ? (
-              topDiseases.map((item) => (
-                <div key={item.disease} className="flex items-center justify-between rounded-3xl bg-slate-50 px-4 py-3">
-                  <span className="text-sm font-medium text-slate-700">{item.disease}</span>
-                  <span className="text-sm text-slate-500">{item.count} cases</span>
-                </div>
-              ))
-            ) : (
-              <div className="rounded-3xl bg-slate-50 px-4 py-5 text-sm text-slate-500">No disease summary available yet.</div>
-            )}
+          <div className="form-horizon-btw">
+            <div>
+              <h2 className="text-lg font-semibold text-slate-900">Top diseases</h2>
+              <p className="mt-1 text-sm text-slate-500">Most frequent conditions from your clinic records.</p>
+            </div>
+            <div className="text-right text-sm text-slate-500">
+              {topDiseases.reduce((sum, item) => sum + item.count, 0)} cases
+            </div>
           </div>
+          {topDiseases.length > 0 ? (
+            <div className="mt-5 space-y-3">
+              {topDiseases.map((item) => {
+                const maxCount = topDiseases[0]?.count || 1;
+                return (
+                  <div key={item.disease} className="space-y-2">
+                    <div className="flex items-center justify-between text-sm text-slate-700">
+                      <span>{item.disease}</span>
+                      <span className="font-semibold">{item.count}</span>
+                    </div>
+                    <div className="h-3 overflow-hidden rounded-full bg-slate-100">
+                      <div
+                        className="h-full rounded-full bg-sky-600"
+                        style={{ width: `${(item.count / maxCount) * 100}%` }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="mt-5 rounded-3xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center text-sm text-slate-500">
+              No disease summary available yet.
+            </div>
+          )}
         </section>
       </div>
     </div>

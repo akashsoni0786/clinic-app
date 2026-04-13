@@ -68,8 +68,12 @@ button, input, textarea, select {
   border: 1px solid #cbd5e1;
   border-radius: 0.75rem;
   padding: 0.85rem 1rem;
-  background: white;
+  background: #ffffff;
   color: #0f172a;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  min-width: 0;
 }
 
 .input-base:focus {
