@@ -9,6 +9,8 @@ const HistoryTable = () => {
   const [inputValue, setInputValue] = useState("");
   const [dateFilter, setDateFilter] = useState("");
   const [expandedDates, setExpandedDates] = useState({});
+  const [currentPage, setCurrentPage] = useState(1);
+  const groupsPerPage = 4;
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -56,6 +58,16 @@ const HistoryTable = () => {
       .sort((a, b) => (a < b ? 1 : -1))
       .map((date) => ({ date, rows: groupedPatients[date] }));
   }, [groupedPatients]);
+
+  const pageCount = Math.max(1, Math.ceil(dateGroups.length / groupsPerPage));
+  const pagedDateGroups = useMemo(() => {
+    const start = (currentPage - 1) * groupsPerPage;
+    return dateGroups.slice(start, start + groupsPerPage);
+  }, [dateGroups, currentPage]);
+
+  useEffect(() => {
+    if (currentPage > pageCount) setCurrentPage(pageCount);
+  }, [currentPage, pageCount]);
 
   const toggleDateGroup = (date) => {
     setExpandedDates((current) => ({
@@ -123,8 +135,8 @@ const HistoryTable = () => {
             </tr>
           </thead>
           <tbody className="text-sm">
-            {dateGroups.length > 0 ? (
-              dateGroups.map(({ date, rows }) => {
+            {pagedDateGroups.length > 0 ? (
+              pagedDateGroups.map(({ date, rows }) => {
                 const expanded = isDateExpanded(date);
                 return (
                   <React.Fragment key={date}>
@@ -197,6 +209,29 @@ const HistoryTable = () => {
             )}
           </tbody>
         </table>
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+          <span>
+            Page {currentPage} of {pageCount}
+          </span>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              disabled={currentPage === 1}
+              className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+              onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+            >
+              Previous
+            </button>
+            <button
+              type="button"
+              disabled={currentPage === pageCount}
+              className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+              onClick={() => setCurrentPage((page) => Math.min(pageCount, page + 1))}
+            >
+              Next
+            </button>
+          </div>
+        </div>
       </div>
       {activeDel && (
         <div className="modal-overlay">
