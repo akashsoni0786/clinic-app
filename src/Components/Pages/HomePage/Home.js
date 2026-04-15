@@ -11,7 +11,7 @@ const Home = () => {
       </div>
       <div className="p25">
         <div className="card-base p-6">
-          <h2 className="text-xl font-semibold text-slate-900">Welcome to MediTrack</h2>
+          <h2 className="text-xl font-semibold text-slate-900">Welcome to Medryon</h2>
           <p className="mt-3 text-slate-600">
             Use the navigation above to add patients, view history, and manage your clinic data.
           </p>

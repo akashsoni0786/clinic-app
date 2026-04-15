@@ -1,7 +1,7 @@
 {
-  "name": "meditrack",
+  "name": "medryon",
   "version": "1.0.0",
-  "description": "MediTrack — Clinic Management Desktop App",
+  "description": "Medryon — Clinic Management Desktop App",
   "main": "electron/main.js",
   "homepage": "./",
   "private": true,
@@ -12,6 +12,7 @@
     "bcryptjs": "2.4.3",
     "electron-updater": "^6.0.0",
     "lowdb": "1.0.0",
+    "nodemailer": "^6.10.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.8.1",
@@ -43,8 +44,8 @@
     ]
   },
   "build": {
-    "appId": "com.meditrack.app",
-    "productName": "MediTrack",
+    "appId": "com.medryon.app",
+    "productName": "Medryon",
     "extends": null,
     "files": [
       "build/**/*",

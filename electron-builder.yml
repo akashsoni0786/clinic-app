@@ -1,5 +1,5 @@
-appId: com.meditrack.app
-productName: MediTrack
+appId: com.medryon.app
+productName: Medryon
 copyright: Copyright © 2026
 directories:
   output: dist
@@ -24,4 +24,4 @@ nsis:
 publish:
   provider: github
   owner: REPLACE_WITH_YOUR_GITHUB_USERNAME
-  repo: meditrack-releases
+  repo: medryon-releases

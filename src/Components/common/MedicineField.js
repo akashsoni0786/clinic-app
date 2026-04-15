@@ -42,6 +42,8 @@ const getCaretPixelPos = (textarea) => {
   };
 };
 
+const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
 const MedicineField = ({ label, value, onChange, error, helpText, data, customData }) => {
   const medicines = useMemo(
     () => [...(data || defaultMedicines), ...(customData || [])],
@@ -59,7 +61,7 @@ const MedicineField = ({ label, value, onChange, error, helpText, data, customDa
 
   const suggestions = useMemo(() => {
     if (lastLine.length < 2) return [];
-    const regex = new RegExp(lastLine, "i");
+    const regex = new RegExp(escapeRegExp(lastLine), "i");
     return medicines.filter((m) => regex.test(m)).slice(0, 8);
   }, [lastLine, medicines]);
 

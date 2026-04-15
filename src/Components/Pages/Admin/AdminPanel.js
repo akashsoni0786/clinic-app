@@ -13,7 +13,10 @@ const AdminPanel = () => {
   const [showAdd, setShowAdd] = useState(false);
   const [newName, setNewName] = useState("");
   const [newUsername, setNewUsername] = useState("");
+  const [newEmail, setNewEmail] = useState("");
+  const [newContact, setNewContact] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  const [showNewPassword, setShowNewPassword] = useState(false);
   const [newRole, setNewRole] = useState("staff");
   const [addError, setAddError] = useState("");
 
@@ -21,6 +24,7 @@ const AdminPanel = () => {
   const [showChangePwd, setShowChangePwd] = useState(false);
   const [changePwdUserId, setChangePwdUserId] = useState("");
   const [newPwd, setNewPwd] = useState("");
+  const [showChangePwdPassword, setShowChangePwdPassword] = useState(false);
   const [changePwdError, setChangePwdError] = useState("");
 
   const fetchUsers = async () => {
@@ -31,15 +35,23 @@ const AdminPanel = () => {
   useEffect(() => { fetchUsers(); }, []);
 
   const handleAddUser = async () => {
-    if (!newName || !newUsername || !newPassword) {
+    const isValidEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+    const isValidPhone = (value) => /^\+?[0-9]{7,15}$/.test(value);
+    if (!newName.trim() || !newUsername.trim() || !newEmail.trim() || !newContact.trim() || !newPassword) {
       setAddError("All fields are required."); return;
     }
+    if (!isValidEmail(newEmail.trim())) {
+      setAddError("Please enter a valid email address."); return;
+    }
+    if (!isValidPhone(newContact.trim())) {
+      setAddError("Please enter a valid contact number (digits only, 7-15 characters)."); return;
+    }
     const result = await window.api.invoke("users:add", token, {
-      name: newName, username: newUsername, password: newPassword, role: newRole,
+      name: newName.trim(), username: newUsername.trim(), email: newEmail.trim(), contact: newContact.trim(), password: newPassword, role: newRole,
     });
     if (result.error) { setAddError(result.error); return; }
     setShowAdd(false);
-    setNewName(""); setNewUsername(""); setNewPassword(""); setNewRole("staff"); setAddError("");
+    setNewName(""); setNewUsername(""); setNewEmail(""); setNewContact(""); setNewPassword(""); setNewRole("staff"); setAddError("");
     await fetchUsers();
     setFeedback({ msg: "User added successfully.", type: "success" });
   };
@@ -91,6 +103,8 @@ const AdminPanel = () => {
             <tr>
               <th className="px-4 py-3 text-left">Name</th>
               <th className="px-4 py-3 text-left">Username</th>
+              <th className="px-4 py-3 text-left">Email</th>
+              <th className="px-4 py-3 text-left">Contact</th>
               <th className="px-4 py-3 text-left">Role</th>
               <th className="px-4 py-3 text-left">Actions</th>
             </tr>
@@ -100,6 +114,8 @@ const AdminPanel = () => {
               <tr key={u.id} className="hover:bg-slate-50">
                 <td className="px-4 py-4">{u.name}</td>
                 <td className="px-4 py-4">{u.username}</td>
+                <td className="px-4 py-4">{u.email || '—'}</td>
+                <td className="px-4 py-4">{u.contact || '—'}</td>
                 <td className="px-4 py-4">{u.role}</td>
                 <td className="px-4 py-4 space-x-2">
                   <button
@@ -127,7 +143,7 @@ const AdminPanel = () => {
             ))}
             {users.length === 0 && (
               <tr>
-                <td colSpan={4} className="px-4 py-6 text-center text-slate-500">
+                <td colSpan={6} className="px-4 py-6 text-center text-slate-500">
                   No users found.
                 </td>
               </tr>
@@ -161,13 +177,41 @@ const AdminPanel = () => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700">Password</label>
+                <label className="block text-sm font-medium text-slate-700">Email</label>
                 <input
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
+                  type="email"
+                  value={newEmail}
+                  onChange={(e) => setNewEmail(e.target.value)}
                   className="input-base mt-2"
                 />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700">Contact Number</label>
+                <input
+                  type="tel"
+                  value={newContact}
+                  onChange={(e) => setNewContact(e.target.value)}
+                  placeholder="e.g. +911234567890"
+                  className="input-base mt-2"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700">Password</label>
+                <div className="relative">
+                  <input
+                    type={showNewPassword ? "text" : "password"}
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="input-base mt-2 pr-20"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword((current) => !current)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs text-slate-700 hover:bg-slate-50"
+                  >
+                    {showNewPassword ? "Hide" : "Show"}
+                  </button>
+                </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700">Role</label>
@@ -212,12 +256,21 @@ const AdminPanel = () => {
             )}
             <div className="mt-4">
               <label className="block text-sm font-medium text-slate-700">New Password</label>
-              <input
-                type="password"
-                value={newPwd}
-                onChange={(e) => setNewPwd(e.target.value)}
-                className="input-base mt-2"
-              />
+              <div className="relative">
+                <input
+                  type={showChangePwdPassword ? "text" : "password"}
+                  value={newPwd}
+                  onChange={(e) => setNewPwd(e.target.value)}
+                  className="input-base mt-2 pr-20"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowChangePwdPassword((current) => !current)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs text-slate-700 hover:bg-slate-50"
+                >
+                  {showChangePwdPassword ? "Hide" : "Show"}
+                </button>
+              </div>
             </div>
             <div className="mt-6 flex justify-end gap-3">
               <button

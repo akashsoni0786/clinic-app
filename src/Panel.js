@@ -88,8 +88,8 @@ function Panel() {
       )}
       <div className="app-header">
         <div className="brand">
-          <img src="logo.png" alt="MediTrack" className="brand-logo" />
-          <span className="brand-name">MediTrack</span>
+          <img src="logo.png" alt="Medryon" className="brand-logo" />
+          <span className="brand-name">Medryon</span>
         </div>
         <div className="header-user">
           <span>
