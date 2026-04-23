@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { contxtname } from "../../../Context/appcontext";
 
 const Settings = () => {
@@ -6,6 +6,7 @@ const Settings = () => {
   const token = contxt.loggedIn.token;
   const [message, setMessage] = useState({ msg: "", type: "success" });
   const [showImportConfirm, setShowImportConfirm] = useState(false);
+  const [clinicName, setClinicName] = useState("");
   const [newItem, setNewItem] = useState({ medicine: "", symptom: "", disease: "" });
 
   const handleExport = async () => {
@@ -29,6 +30,26 @@ const Settings = () => {
       setTimeout(() => {
         contxt.setLoggedIn({ id: "", username: "", name: "", role: null, token: null, loggedin: false });
       }, 2000);
+    }
+  };
+
+  useEffect(() => {
+    const fetchClinicConfig = async () => {
+      const result = await window.api.invoke("settings:getClinicConfig", token);
+      if (!result?.error) {
+        setClinicName(result.clinicName || "");
+      }
+    };
+
+    fetchClinicConfig();
+  }, [token]);
+
+  const handleSaveClinicName = async () => {
+    const result = await window.api.invoke("settings:saveClinicConfig", token, { clinicName });
+    if (result.error) {
+      setMessage({ msg: result.error, type: "critical" });
+    } else {
+      setMessage({ msg: "Clinic name saved successfully.", type: "success" });
     }
   };
 
@@ -147,6 +168,30 @@ const Settings = () => {
           Export Data
         </button>
       </section>
+      <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+        <h2 className="text-base font-semibold">Clinic Details</h2>
+        <p className="mt-2 text-sm text-slate-600">Apne clinic ka naam yahan daalein. Ye naam bill aur reports mein dikhaya jayega.</p>
+        <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-end">
+          <div className="flex-1">
+            <label className="mb-2 block text-sm font-medium text-slate-700">Clinic Name</label>
+            <input
+              type="text"
+              value={clinicName}
+              onChange={(e) => setClinicName(e.target.value)}
+              placeholder="Apne clinic ka naam likhein"
+              className="input-base w-full"
+            />
+          </div>
+          <button
+            type="button"
+            className="rounded-full bg-sky-600 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-700"
+            onClick={handleSaveClinicName}
+          >
+            Save Clinic Name
+          </button>
+        </div>
+      </section>
+
       <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
         <h2 className="text-base font-semibold">Data Import</h2>
         <p className="mt-2 text-sm text-slate-600"><strong>Warning:</strong> Importing will replace ALL current data and log out all users. Export first as a backup.</p>

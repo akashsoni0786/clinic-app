@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { contxtname } from "../../../Context/appcontext";
 import MedicineField from "../../common/MedicineField";
 import homeopathySymptoms from "../../../data/homeopathySymptoms";
 import homeopathyDiseases from "../../../data/homeopathyDiseases";
+import { generateBillPdf } from "../../common/generateBillPdf";
 
 const PatientForm = () => {
   const contxt = React.useContext(contxtname);
@@ -20,6 +21,28 @@ const PatientForm = () => {
       String(date.getSeconds()) +
       String(date.getMilliseconds())
   );
+  const [loading, setLoading] = useState(false);
+  const [toast, setToast] = useState({ message: "", type: "success", visible: false });
+  const [billPreview, setBillPreview] = useState(null);
+  const [clinicName, setClinicName] = useState("Medryon Clinic");
+
+  useEffect(() => {
+    const fetchClinicName = async () => {
+      try {
+        const result = await window.api.invoke("settings:getClinicConfig", contxt.loggedIn.token);
+        if (!result?.error && result?.clinicName) {
+          setClinicName(result.clinicName);
+        }
+      } catch (error) {
+        console.error("Unable to load clinic name:", error);
+      }
+    };
+
+    fetchClinicName();
+  }, [contxt.loggedIn.token]);
+
+
+
   const [patient, setPatient] = useState({
     id: regno,
     name: "",
@@ -41,83 +64,143 @@ const PatientForm = () => {
       },
     ],
   });
+// ✅ IPC Timeout Wrapper — component ke bahar define karo
+const invokeWithTimeout = (channel, ...args) => {
+  return Promise.race([
+    window.api.invoke(channel, ...args),
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error(`IPC timeout: ${channel}`)), 10000)
+    ),
+  ]);
+};
+const handleSubmit = async (options = {}) => {
+  try {
+    setLoading(true);
 
-  const handleSubmit = async () => {
+    const generateBill =
+      typeof options === "object" && typeof options.generateBill === "boolean"
+        ? options.generateBill
+        : false;
+
+    console.log("handleSubmit called, generateBill:", generateBill);
+
+    // ✅ Validation
     const errors = {
-      name: false,
-      nameErr: "",
-      date: false,
-      dateErr: "",
-      gender: false,
-      genderErr: "",
-      location: false,
-      locationErr: "",
-      symptoms: false,
-      symptomsErr: "",
-      medicines: false,
-      medicinesErr: "",
-      desease: false,
-      deseaseErr: "",
+      name: !patient.name,
+      nameErr: !patient.name ? "Please enter patient name." : "",
+      date: !patient.date,
+      dateErr: !patient.date ? "Please select a date." : "",
+      gender: !patient.gender,
+      genderErr: !patient.gender ? "Please select a gender." : "",
+      location: !patient.location,
+      locationErr: !patient.location ? "Please enter a location." : "",
+      symptoms: !patient.symptoms,
+      symptomsErr: !patient.symptoms ? "Please enter symptoms." : "",
+      medicines: !patient.medicines,
+      medicinesErr: !patient.medicines ? "Please enter medicines." : "",
+      desease: !patient.desease,
+      deseaseErr: !patient.desease ? "Please enter disease name." : "",
     };
 
-    if (!patient.name) {
-      errors.name = true;
-      errors.nameErr = "Please enter patient name.";
-    }
-    if (!patient.date) {
-      errors.date = true;
-      errors.dateErr = "Please select a date.";
-    }
-    if (!patient.gender) {
-      errors.gender = true;
-      errors.genderErr = "Please select a gender.";
-    }
-    if (!patient.location) {
-      errors.location = true;
-      errors.locationErr = "Please enter a location.";
-    }
-    if (!patient.symptoms) {
-      errors.symptoms = true;
-      errors.symptomsErr = "Please enter symptoms.";
-    }
-    if (!patient.medicines) {
-      errors.medicines = true;
-      errors.medicinesErr = "Please enter medicines.";
-    }
-    if (!patient.desease) {
-      errors.desease = true;
-      errors.deseaseErr = "Please enter disease name.";
-    }
+    const hasError = Object.values(errors).some((v) => v === true);
 
-    const hasError = Object.values(errors).some((value) => value === true);
     if (hasError) {
       setPatientError(errors);
+      setToast({
+        message: "Please fix validation errors before submitting.",
+        type: "error",
+        visible: true,
+      });
+      setLoading(false);
       return;
     }
 
-    const tempdata = {
-      ...patient,
-      dateWiseData: [
-        {
-          todaydate: patient.date,
-          daysymptoms: patient.symptoms,
-          daymedicines: patient.medicines,
-          pathology_report: patient.pathology_report,
-          fee: patient.fee,
-        },
-      ],
+    const billNumber = `BILL-${regno}`;
+    const billDetails = {
+      billGenerated: generateBill,
+      billNumber,
+      billGeneratedAt: new Date().toISOString(),
+      billTotal: Number(patient.fee) || 0,
+      billItems: patient.medicines,
+      billDisease: patient.desease,
+      billPathology: patient.pathology_report,
     };
 
-    try {
-      const token = contxt.loggedIn.token;
-      await window.api.invoke("patients:add", token, tempdata);
-      const patients = await window.api.invoke("patients:getAll", token);
-      contxt.setPatientList(patients);
-      navigate("/history");
-    } catch (e) {
-      console.log("Error : ", e);
+    const tempdata = JSON.parse(
+      JSON.stringify({
+        ...patient,
+        ...(generateBill ? { bill: billDetails } : {}),
+        dateWiseData: [
+          {
+            todaydate: patient.date,
+            daysymptoms: patient.symptoms,
+            daymedicines: patient.medicines,
+            pathology_report: patient.pathology_report,
+            fee: patient.fee,
+          },
+        ],
+      })
+    );
+
+    const token = contxt?.loggedIn?.token;
+    if (!token) throw new Error("Session expired. Please login again.");
+
+    // ✅ Save patient
+    const addResult = await window.api.invoke("patients:add", token, tempdata);
+    if (addResult?.error) throw new Error(addResult.error);
+
+    let message = "Patient saved successfully.";
+    let toastType = "success";
+
+    // ✅ Generate bill — FRONTEND ONLY (no IPC)
+    if (generateBill) {
+      try {
+        const doc = generateBillPdf(patient, billDetails, clinicName);
+
+        // ✅ Preview ke liye blob URL banao
+        const pdfBlob = doc.output("blob");
+        const pdfUrl = URL.createObjectURL(pdfBlob);
+
+        setBillPreview({
+          billNumber,
+          pdfUrl,       // blob URL — embed mein use hoga
+          doc,          // download ke liye
+          patient: { ...patient },
+          bill: billDetails,
+        });
+
+        message = `Patient saved & bill generated. Bill: ${billNumber}`;
+      } catch (pdfErr) {
+        console.error("PDF generation error:", pdfErr);
+        message = `Patient saved, but PDF failed: ${pdfErr.message}`;
+        toastType = "error";
+      }
     }
-  };
+
+    // ✅ Refresh list
+    const patients = await window.api.invoke("patients:getAll", token);
+    if (patients?.error) throw new Error(patients.error);
+
+    contxt.setPatientList(patients);
+
+    setToast({ message, type: toastType, visible: true });
+
+    // ✅ Bill generate hua hai toh navigate nahi — user modal se close karega
+    if (!generateBill) {
+      setTimeout(() => navigate("/history"), 800);
+    }
+
+  } catch (e) {
+    console.error("❌ Error:", e);
+    setToast({
+      message: e?.message || "Something went wrong",
+      type: "error",
+      visible: true,
+    });
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleContactNoChange = (value) => {
     if (/^\d*$/.test(value)) {
@@ -136,6 +219,15 @@ const PatientForm = () => {
       setPatient({ ...patient, fee: value });
     }
   };
+
+ const handleOpenPdf = () => {
+  if (!billPreview?.pdfUrl) {
+    setToast({ message: "PDF unavailable.", type: "error", visible: true });
+    return;
+  }
+  // Blob URL ko new tab mein open karo
+  window.open(billPreview.pdfUrl, "_blank");
+};
 
   const handleReset = () => {
     setPatient({
@@ -165,6 +257,11 @@ const PatientForm = () => {
           <img alt="patient pic" src="patient.png" className="patient-pic" />
           <h1 className="page-heading">Add Patient</h1>
         </div>
+        {toast.visible && (
+          <div className={`mt-4 rounded-2xl border px-4 py-3 text-sm ${toast.type === 'success' ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-red-200 bg-red-50 text-red-700'}`}>
+            {toast.message}
+          </div>
+        )}
         <div className="form-horizon child-mar-15">
           <button
             type="button"
@@ -175,15 +272,24 @@ const PatientForm = () => {
           </button>
           <button
             type="button"
-            className="rounded-full bg-sky-600 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-700"
-            onClick={handleSubmit}
+            className="rounded-full border border-slate-200 bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-200"
+            onClick={() => handleSubmit({ generateBill: false })}
+            disabled={loading}
           >
-            Submit
+            {loading ? "Processing..." : "Submit"}
+          </button>
+          <button
+            type="button"
+            className="rounded-full bg-sky-600 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-700"
+            onClick={() => handleSubmit({ generateBill: true })}
+            disabled={loading}
+          >
+            {loading ? "Processing..." : "Submit & Generate Bill"}
           </button>
         </div>
       </div>
       <div className="p25">
-        <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
+        <form onSubmit={(e) => { e.preventDefault(); handleSubmit({ generateBill: false }); }}>
           <div className="card-base p-6 space-y-6">
             <div>
               <label className="block text-sm font-medium text-slate-700">Registration number</label>
@@ -308,6 +414,124 @@ const PatientForm = () => {
           </div>
         </form>
       </div>
+      {billPreview && (
+        <div className="modal-overlay">
+          <div className="modal-panel max-w-3xl">
+            <div className="flex flex-col gap-4 rounded-3xl border border-slate-200 bg-white p-6 shadow-xl">
+              <div className="flex flex-col gap-3 border-b border-slate-200 pb-4 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <div className="text-xs uppercase tracking-[0.25em] text-slate-500">Invoice</div>
+                  <h2 className="text-2xl font-bold text-slate-900">{clinicName || 'Medryon Clinic'}</h2>
+                </div>
+                <div className="space-y-2 text-right">
+                  <div className="text-sm text-slate-500">Invoice No.</div>
+                  <div className="text-lg font-semibold text-slate-900">{billPreview.billNumber}</div>
+                  <div className="text-sm text-slate-500">Date Issued</div>
+                  <div className="text-sm font-medium text-slate-700">{new Date(billPreview.bill.billGeneratedAt).toLocaleDateString()}</div>
+                </div>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <div className="text-sm font-semibold text-slate-700">Billed To</div>
+                  <div className="mt-2 text-sm text-slate-600">{billPreview.patient.name}</div>
+                  <div className="text-sm text-slate-600">{billPreview.patient.contact_no ? `+91 ${billPreview.patient.contact_no}` : "Contact not set"}</div>
+                  <div className="text-sm text-slate-600">{billPreview.patient.location}</div>
+                </div>
+                <div>
+                  <div className="text-sm font-semibold text-slate-700">Patient Details</div>
+                  <div className="mt-2 text-sm text-slate-600">Age: {billPreview.patient.patient_age || 'N/A'}</div>
+                  <div className="text-sm text-slate-600">Gender: {billPreview.patient.gender || 'N/A'}</div>
+                </div>
+              </div>
+
+              <div className="overflow-hidden rounded-3xl border border-slate-200">
+                <table className="w-full border-collapse text-sm">
+                  <thead className="bg-slate-100 text-left text-slate-600">
+                    <tr>
+                      <th className="px-4 py-3">Description</th>
+                      <th className="px-4 py-3">Qty</th>
+                      <th className="px-4 py-3">Rate</th>
+                      <th className="px-4 py-3">Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white">
+                    <tr className="border-b border-slate-200">
+                      <td className="px-4 py-4">Consultation Fee</td>
+                      <td className="px-4 py-4">1</td>
+                      <td className="px-4 py-4">₹{Number(billPreview.bill.billTotal || billPreview.patient.fee || 0)}</td>
+                      <td className="px-4 py-4 font-semibold">₹{Number(billPreview.bill.billTotal || billPreview.patient.fee || 0)}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <div className="rounded-3xl bg-slate-50 p-4 text-sm text-slate-600">
+                  <div className="font-semibold text-slate-700">Notes</div>
+                  <p className="mt-2">Thank you for visiting Medryon. Please contact us for any follow-up consultation.</p>
+                </div>
+                <div className="rounded-3xl bg-slate-900 p-4 text-right text-white">
+                  <div className="text-sm text-slate-300">Grand Total</div>
+                  <div className="text-2xl font-bold">₹{Number(billPreview.bill.billTotal || billPreview.patient.fee || 0)}</div>
+                </div>
+              </div>
+
+             {billPreview?.pdfUrl && (
+  <div className="mt-6 overflow-hidden rounded-3xl border border-slate-200">
+    <embed
+      src={billPreview.pdfUrl}
+      type="application/pdf"
+      width="100%"
+      height="480px"
+    />
+  </div>
+)}
+
+             <div className="mt-4 flex flex-wrap gap-3 justify-end">
+  <button
+    type="button"
+    className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+    onClick={() => {
+      setBillPreview(null);
+      navigate("/history");
+    }}
+  >
+    Close & View History
+  </button>
+
+  {/* Open PDF — new tab mein */}
+  <button
+    type="button"
+    className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+    onClick={handleOpenPdf}
+  >
+    Open PDF
+  </button>
+
+  {/* Download PDF — direct save */}
+  {billPreview?.doc && (
+    <button
+      type="button"
+      className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+      onClick={() => billPreview.doc.save(`${billPreview.billNumber}.pdf`)}
+    >
+      Download PDF
+    </button>
+  )}
+
+  <button
+    type="button"
+    className="rounded-full bg-sky-600 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-700"
+    onClick={() => window.print()}
+  >
+    Print Bill
+  </button>
+</div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
