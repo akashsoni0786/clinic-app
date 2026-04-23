@@ -170,10 +170,18 @@ const HistoryTable = () => {
                               {rowdata.id}
                             </button>
                           </td>
-                          <td className="px-4 py-3">{rowdata.name}</td>
-                          <td className="px-4 py-3">{rowdata.date}</td>
-                          <td className="px-4 py-3">{rowdata.desease}</td>
-                          <td className="px-4 py-3">{rowdata.location}</td>
+                          <td className="px-4 py-3 max-w-[150px] truncate overflow-hidden whitespace-nowrap">
+                            {rowdata.name}
+                          </td>
+                          <td className="px-4 py-3 max-w-[150px] truncate overflow-hidden whitespace-nowrap">
+                            {rowdata.date}
+                          </td>
+                          <td className="px-4 py-3 max-w-[150px] truncate overflow-hidden whitespace-nowrap">
+                            {rowdata.desease}
+                          </td>
+                          <td className="px-4 py-3 max-w-[150px] truncate overflow-hidden whitespace-nowrap">
+                            {rowdata.location}
+                          </td>
                           <td className="px-4 py-3">
                             <div className="flex flex-wrap gap-2">
                               <button

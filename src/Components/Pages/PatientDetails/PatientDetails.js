@@ -366,7 +366,7 @@ const PatientDetails = () => {
       <div className="form-horizon-btw p25">
         <div className="form-horizon-start">
           <img alt="details pic" src="details.png" className="patient-pic" />
-          <h1 className="page-heading">{patientInfo.name}</h1>
+          <h1 className="page-heading max-w-[70vw] truncate overflow-hidden whitespace-nowrap">{patientInfo.name}</h1>
         </div>
       </div>
       <div className="space-y-5 p25">
@@ -435,7 +435,9 @@ const PatientDetails = () => {
                   {patientData.map((row, rowIndex) => (
                     <tr key={rowIndex} className="hover:bg-slate-50">
                       {row.map((cell, cellIndex) => (
-                        <td key={cellIndex} className="px-4 py-4 align-top">
+                        <td key={cellIndex}
+                        className="px-4 py-4 align-top max-w-[150px] truncate overflow-hidden whitespace-nowrap"
+                        >
                           {cell}
                         </td>
                       ))}

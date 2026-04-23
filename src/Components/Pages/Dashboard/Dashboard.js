@@ -369,8 +369,9 @@ const Dashboard = () => {
 
         <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
           <p className="text-sm uppercase tracking-[0.16em] text-slate-500">Today’s earnings</p>
-          <p className="mt-3 text-3xl font-semibold text-slate-900">₹ {todayEarnings.toLocaleString()}</p>
-          <p className="mt-2 text-sm text-slate-500">Clinic income recorded for today.</p>
+<p className="mt-3 text-3xl font-semibold text-slate-900 break-all">
+  ₹ {todayEarnings.toLocaleString()}
+</p>        <p className="mt-2 text-sm text-slate-500">Clinic income recorded for today.</p>
         </div>
 
         <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
