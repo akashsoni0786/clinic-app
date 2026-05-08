@@ -120,29 +120,6 @@ const PatientDetails = () => {
     addInfoRow("Contact", patient.contact_no ? `+91 ${patient.contact_no}` : "N/A", 110, y); y += 8;
     addInfoRow("Location", patient.location, 14, y); y += 8;
 
-    doc.setFont("helvetica", "bold");
-    doc.text("Symptoms:", 14, y);
-    doc.setFont("helvetica", "normal");
-    const sympLines = doc.splitTextToSize(symptoms || "N/A", pageWidth - 60);
-    doc.text(sympLines, 46, y);
-    y += sympLines.length * 6 + 2;
-
-    doc.setFont("helvetica", "bold");
-    doc.text("Medicines:", 14, y);
-    doc.setFont("helvetica", "normal");
-    const medLines = doc.splitTextToSize(medicines || "N/A", pageWidth - 60);
-    doc.text(medLines, 46, y);
-    y += medLines.length * 6 + 2;
-
-    if (pathology) {
-      doc.setFont("helvetica", "bold");
-      doc.text("Pathology:", 14, y);
-      doc.setFont("helvetica", "normal");
-      const pathLines = doc.splitTextToSize(pathology, pageWidth - 60);
-      doc.text(pathLines, 46, y);
-      y += pathLines.length * 6 + 2;
-    }
-
     y += 6;
 
     // Billing Summary Table
@@ -265,6 +242,8 @@ const handleEditClick = (originalIndex) => {
   if (!data) return;
 
   const charges = data.otherCharges || [];
+  // Legacy compat: old patientForm records stored consultation in fixcharge, total in fee. Prefer fixcharge if present.
+  const consultation = data.fixcharge !== undefined ? data.fixcharge : (data.fee || "");
   setEditIndex(originalIndex);
   setOtherCharges([...charges]);
   setEditedData({
@@ -272,7 +251,7 @@ const handleEditClick = (originalIndex) => {
     symptoms: data.daysymptoms || "",
     medicines: data.daymedicines || "",
     pathology_report: data.pathology_report || "",
-    fee: data.fee || "",
+    fee: consultation === "" ? "" : String(consultation),
     otherCharges: [...charges],
   });
   setActiveEdit(true); // ✅ sabse last mein open karo
@@ -288,9 +267,10 @@ const setuppatientData = (allptntdata) => {
 
     let symp = data.daysymptoms.replaceAll("\n", "<br/> &#x2022 ");
     let medi = data.daymedicines.replaceAll("\n", "<br/> &#x2022 ");
-    let fee  = data.otherCharges?.length>0 ? data.otherCharges
-    .reduce((sum, charge) => sum + Number(charge?.singleprice || 0) * Number(charge?.quantity || 0), 0)+Number(data.fee ? data.fee : 0)
-    :(data.fee ? data.fee : "");
+    // Legacy compat: old patientForm records had fee=total + fixcharge=consultation. New shape: fee=consultation only.
+    const consultation = Number(data.fixcharge ?? data.fee ?? 0) || 0;
+    const otherSum = (data.otherCharges || []).reduce((sum, charge) => sum + Number(charge?.singleprice || 0) * Number(charge?.quantity || 0), 0);
+    let fee = (consultation + otherSum) || "";
 
     temp.push([
       data.todaydate,
@@ -372,6 +352,11 @@ const onSubmitEditedData = async () => {
   });
   const noError = !Object.keys(editedData).some((key) => key !== "otherCharges" && errors[key]);
 
+  if (!noError) {
+    setEditedDataError(errors);
+    return false;
+  }
+
   let tempData = { ...location.state.rowdata };
   tempData.dateWiseData = [...location.state.rowdata.dateWiseData];
   tempData.dateWiseData[editIndex] = {
@@ -383,25 +368,28 @@ const onSubmitEditedData = async () => {
     otherCharges: otherCharges,
   };
 
-  if (noError) {
-    try {
-      const token = contxt.loggedIn.token;
-      await window.api.invoke("patients:update", token, location.state.rowdata.id, tempData);
-      const alldata = await window.api.invoke("patients:getAll", token);
-      contxt.setPatientList(alldata);
+  try {
+    const token = contxt.loggedIn.token;
+    await window.api.invoke("patients:update", token, location.state.rowdata.id, tempData);
+    const alldata = await window.api.invoke("patients:getAll", token);
+    contxt.setPatientList(alldata);
 
-      // ✅ location.state.rowdata update karo
-      const freshPatient = alldata.find((p) => p.id === location.state.rowdata.id);
-      if (freshPatient) location.state.rowdata = freshPatient;
+    // ✅ location.state.rowdata update karo
+    const freshPatient = alldata.find((p) => p.id === location.state.rowdata.id);
+    if (freshPatient) location.state.rowdata = freshPatient;
 
-      setuppatientData(freshPatient.dateWiseData);
-      setActiveEdit(false);
-      setEditIndex("");
-      setEditedData({ date: "", symptoms: "", medicines: "", pathology_report: "", fee: "", otherCharges: [] });
-      setOtherCharges([]);
-    } catch (e) { console.log(e); }
+    setuppatientData(freshPatient.dateWiseData);
+    setActiveEdit(false);
+    setEditIndex("");
+    setEditedData({ date: "", symptoms: "", medicines: "", pathology_report: "", fee: "", otherCharges: [] });
+    setOtherCharges([]);
+    setEditedDataError(errors);
+    return true;
+  } catch (e) {
+    console.log(e);
+    setEditedDataError(errors);
+    return false;
   }
-  setEditedDataError(errors);
 };
 
  const onSubmitAddedData = async () => {
@@ -413,6 +401,11 @@ const onSubmitEditedData = async () => {
       : { ...errors, [key]: false, [key + "Err"]: "" };
   });
   const noError = !Object.keys(editedData).some((key) => key !== "otherCharges" && errors[key]);
+
+  if (!noError) {
+    setEditedDataError(errors);
+    return false;
+  }
 
   let tempData = { ...location.state.rowdata };
   tempData.dateWiseData = [
@@ -427,25 +420,28 @@ const onSubmitEditedData = async () => {
     ...location.state.rowdata.dateWiseData,
   ];
 
-  if (noError) {
-    try {
-      const token = contxt.loggedIn.token;
-      await window.api.invoke("patients:update", token, location.state.rowdata.id, tempData);
-      const alldata = await window.api.invoke("patients:getAll", token);
-      contxt.setPatientList(alldata);
+  try {
+    const token = contxt.loggedIn.token;
+    await window.api.invoke("patients:update", token, location.state.rowdata.id, tempData);
+    const alldata = await window.api.invoke("patients:getAll", token);
+    contxt.setPatientList(alldata);
 
-      // ✅ location.state.rowdata update karo
-      const freshPatient = alldata.find((p) => p.id === location.state.rowdata.id);
-      if (freshPatient) location.state.rowdata = freshPatient;
+    // ✅ location.state.rowdata update karo
+    const freshPatient = alldata.find((p) => p.id === location.state.rowdata.id);
+    if (freshPatient) location.state.rowdata = freshPatient;
 
-      setuppatientData(freshPatient.dateWiseData);
-      setActiveAdd(false);
-      setEditIndex("");
-      setEditedData({ date: "", symptoms: "", medicines: "", pathology_report: "", fee: "", otherCharges: [] });
-      setOtherCharges([]);
-    } catch (e) { console.log(e); }
+    setuppatientData(freshPatient.dateWiseData);
+    setActiveAdd(false);
+    setEditIndex("");
+    setEditedData({ date: "", symptoms: "", medicines: "", pathology_report: "", fee: "", otherCharges: [] });
+    setOtherCharges([]);
+    setEditedDataError(errors);
+    return true;
+  } catch (e) {
+    console.log(e);
+    setEditedDataError(errors);
+    return false;
   }
-  setEditedDataError(errors);
 };
 
   const onDeleteData = async () => {
@@ -778,7 +774,10 @@ const onSubmitEditedData = async () => {
               <button
                 type="button"
                 className="rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-100"
-                onClick={async () => { await onSubmitAddedData(); handleGenerateBill(); }}
+                onClick={async () => {
+                  const ok = await onSubmitAddedData();
+                  if (ok) handleGenerateBill();
+                }}
               >
                 Generate Bill
               </button>
@@ -806,7 +805,10 @@ const onSubmitEditedData = async () => {
               <button
                 type="button"
                 className="rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-100"
-                onClick={async () => { await onSubmitEditedData(); handleGenerateBill(); }}
+                onClick={async () => {
+                  const ok = await onSubmitEditedData();
+                  if (ok) handleGenerateBill();
+                }}
               >
                 Generate Bill
               </button>

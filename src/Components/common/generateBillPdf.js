@@ -50,31 +50,6 @@ export const generateBillPdf = (patient, billDetails, clinicName) => {
   y += 8;
   addRow("Location", patient.location, col1, y);
   y += 8;
-  // addRow("Disease", patient.desease, col1, y);
-  // y += 8;
-
-  doc.setFont("helvetica", "bold");
-  doc.text("Symptoms:", col1, y);
-  doc.setFont("helvetica", "normal");
-  const sympLines = doc.splitTextToSize(patient.symptoms || "N/A", pageWidth - col1 - 40);
-  doc.text(sympLines, col1 + 30, y);
-  y += sympLines.length * 6 + 2;
-
-  // doc.setFont("helvetica", "bold");
-  // doc.text("Medicines:", col1, y);
-  // doc.setFont("helvetica", "normal");
-  // const medLines = doc.splitTextToSize(patient.medicines || "N/A", pageWidth - col1 - 40);
-  // doc.text(medLines, col1 + 30, y);
-  // y += medLines.length * 6 + 2;
-
-  // if (patient.pathology_report) {
-  //   doc.setFont("helvetica", "bold");
-  //   doc.text("Pathology:", col1, y);
-  //   doc.setFont("helvetica", "normal");
-  //   const pathLines = doc.splitTextToSize(patient.pathology_report, pageWidth - col1 - 40);
-  //   doc.text(pathLines, col1 + 30, y);
-  //   y += pathLines.length * 6 + 2;
-  // }
 
   y += 6;
 
@@ -129,7 +104,7 @@ export const generateBillPdf = (patient, billDetails, clinicName) => {
   };
 
   // ── Row 1: Consultation Fee ───────────────────────────
-  const consultFee = Number(billDetails.billTotal || 0);
+  const consultFee = Number(patient.fee || 0);
   drawRow("Consultation Fee", "-", consultFee, consultFee);
 
   // ── Other Charges rows ────────────────────────────────

@@ -25,7 +25,7 @@ const PatientForm = () => {
   const [toast, setToast] = useState({ message: "", type: "success", visible: false });
   const [billPreview, setBillPreview] = useState(null);
   const [clinicName, setClinicName] = useState("Medryon Clinic");
-  const [otherCharges, setOtherCharges] = useState([{ description: "Injection", price: "100" }, { description: "Syrup", price: "300" }]);
+  const [otherCharges, setOtherCharges] = useState([]);
 
   useEffect(() => {
     const fetchClinicName = async () => {
@@ -68,147 +68,6 @@ const PatientForm = () => {
       },
     ],
   });
-  // ✅ IPC Timeout Wrapper — component ke bahar define karo
-  const invokeWithTimeout = (channel, ...args) => {
-    return Promise.race([
-      window.api.invoke(channel, ...args),
-      new Promise((_, reject) =>
-        setTimeout(() => reject(new Error(`IPC timeout: ${channel}`)), 10000)
-      ),
-    ]);
-  };
-  const handleGenerateBill = async (options = {}) => {
-    try {
-      setLoading(true);
-
-      const generateBill =
-        typeof options === "object" && typeof options.generateBill === "boolean"
-          ? options.generateBill
-          : false;
-
-      console.log("handleSubmit called, generateBill:", generateBill);
-
-      // ✅ Validation
-      const errors = {
-        name: !patient.name,
-        nameErr: !patient.name ? "Please enter patient name." : "",
-        date: !patient.date,
-        dateErr: !patient.date ? "Please select a date." : "",
-        gender: !patient.gender,
-        genderErr: !patient.gender ? "Please select a gender." : "",
-        location: !patient.location,
-        locationErr: !patient.location ? "Please enter a location." : "",
-        symptoms: !patient.symptoms,
-        symptomsErr: !patient.symptoms ? "Please enter symptoms." : "",
-        medicines: !patient.medicines,
-        medicinesErr: !patient.medicines ? "Please enter medicines." : "",
-        desease: !patient.desease,
-        deseaseErr: !patient.desease ? "Please enter disease name." : "",
-      };
-
-      const hasError = Object.values(errors).some((v) => v === true);
-
-      if (hasError) {
-        setPatientError(errors);
-        setToast({
-          message: "Please fix validation errors before submitting.",
-          type: "error",
-          visible: true,
-        });
-        setLoading(false);
-        return;
-      }
-      const totalCharges = otherCharges?.reduce((sum, charge) => sum + Number(charge?.singleprice == "" ? 0 : Number(charge?.singleprice || 0) * Number(charge?.quantity || 0)), 0) + Number(patient.fee || 0);
-      console.log("Total Charges calculated:", totalCharges);
-      const billNumber = `BILL-${regno}`;
-      const billDetails = {
-        billGenerated: generateBill,
-        billNumber,
-        billGeneratedAt: new Date().toISOString(),
-        billTotal: totalCharges,
-        billItems: patient.medicines,
-        billDisease: patient.desease,
-        billPathology: patient.pathology_report,
-        otherCharges: otherCharges,
-      };
-
-      const tempdata = JSON.parse(
-        JSON.stringify({
-          ...patient,
-          ...(generateBill ? { bill: billDetails } : {}),
-          dateWiseData: [
-            {
-              todaydate: patient.date,
-              daysymptoms: patient.symptoms,
-              daymedicines: patient.medicines,
-              pathology_report: patient.pathology_report,
-              fee: totalCharges,
-              otherCharges: patient.otherCharges,
-              fixcharge: patient.fee,
-            },
-          ],
-        })
-      );
-
-      const token = contxt?.loggedIn?.token;
-      if (!token) throw new Error("Session expired. Please login again.");
-
-      // ✅ Save patient
-      // const addResult = await window.api.invoke("patients:add", token, tempdata);
-      // if (addResult?.error) throw new Error(addResult.error);
-
-      let message = "Bill generated successfully.";
-      let toastType = "success";
-
-      // ✅ Generate bill — FRONTEND ONLY (no IPC)
-      if (generateBill) {
-        try {
-          const doc = generateBillPdf(patient, billDetails, clinicName);
-
-          // ✅ Preview ke liye blob URL banao
-          const pdfBlob = doc.output("blob");
-          const pdfUrl = URL.createObjectURL(pdfBlob);
-
-          setBillPreview({
-            billNumber,
-            pdfUrl,       // blob URL — embed mein use hoga
-            doc,          // download ke liye
-            patient: { ...patient },
-            bill: billDetails,
-          });
-
-          message = `Bill generated. Bill: ${billNumber}`;
-        } catch (pdfErr) {
-          console.error("PDF generation error:", pdfErr);
-          message = `Patient saved, but PDF failed: ${pdfErr.message}`;
-          toastType = "error";
-        }
-      }
-
-      // ✅ Refresh list
-      // const patients = await window.api.invoke("patients:getAll", token);
-      // if (patients?.error) throw new Error(patients.error);
-
-      // contxt.setPatientList(patients);
-
-      // setToast({ message, type: toastType, visible: true });
-
-      // ✅ Bill generate hua hai toh navigate nahi — user modal se close karega
-      // if (!generateBill) {
-      //   setTimeout(() => navigate("/history"), 800);
-      // }
-
-    } catch (e) {
-      console.error("❌ Error:", e);
-      setToast({
-        message: e?.message || "Something went wrong",
-        type: "error",
-        visible: true,
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
   const handleSubmit = async (options = {}) => {
     try {
       setLoading(true);
@@ -274,9 +133,8 @@ const PatientForm = () => {
               daysymptoms: patient.symptoms,
               daymedicines: patient.medicines,
               pathology_report: patient.pathology_report,
-              fee: totalCharges,
-              otherCharges: patient.otherCharges,
-              fixcharge: patient.fee,
+              fee: patient.fee,
+              otherCharges: otherCharges,
             },
           ],
         })
@@ -361,7 +219,7 @@ const PatientForm = () => {
   };
 
   const handleOtherChargeChange = (index, field, value) => {
-    if (field === "price" && !/^\d*$/.test(value)) return; // Price should be numeric
+    if ((field === "singleprice" || field === "quantity") && !/^\d*$/.test(value)) return;
     const updatedCharges = [...otherCharges];
     updatedCharges[index][field] = value;
     setOtherCharges(updatedCharges);
@@ -434,7 +292,7 @@ const PatientForm = () => {
           <button
             type="button"
             className="rounded-full bg-sky-600 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-700"
-            onClick={() => handleGenerateBill({ generateBill: true })}
+            onClick={() => handleSubmit({ generateBill: true })}
             disabled={loading}
           >
             {loading ? "Processing..." : "Submit & Generate Bill"}
@@ -783,5 +641,4 @@ const PatientForm = () => {
     </div>
   );
 };
-
 export default PatientForm;
