@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import connectToDatabase from '@/lib/db';
-import { User } from '@/models';
+import { User, OtpToken } from '@/models';
 import { hashPassword } from '@/lib/password';
 
 export async function POST(req) {
@@ -15,6 +15,24 @@ export async function POST(req) {
   const existingAdmin = await User.countDocuments({ role: 'admin' });
   if (existingAdmin > 0) {
     return NextResponse.json({ error: 'Setup already complete' }, { status: 403 });
+  }
+
+  // Require the email to have been verified via OTP within the past 24 hours.
+  // Test/dev shortcut: skip if SKIP_EMAIL_VERIFY=1 in env.
+  if (process.env.SKIP_EMAIL_VERIFY !== '1') {
+    const emailKey = email.trim().toLowerCase();
+    const verifiedToken = await OtpToken.findOne({
+      purpose: 'email_verification',
+      identifier: emailKey,
+      used: true,
+      createdAt: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) },
+    });
+    if (!verifiedToken) {
+      return NextResponse.json(
+        { error: 'Email not verified. Please send and verify the OTP first.' },
+        { status: 400 }
+      );
+    }
   }
 
   const passwordHash = await hashPassword(password);
