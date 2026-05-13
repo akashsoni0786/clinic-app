@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 
+const SKIP_EMAIL_VERIFY = process.env.NEXT_PUBLIC_SKIP_EMAIL_VERIFY === '1';
+
 export default function FirstRunForm() {
   const [name, setName] = useState('');
   const [username, setUsername] = useState('');
@@ -12,7 +14,7 @@ export default function FirstRunForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [verificationCode, setVerificationCode] = useState('');
-  const [emailVerified, setEmailVerified] = useState(false);
+  const [emailVerified, setEmailVerified] = useState(SKIP_EMAIL_VERIFY);
   const [verificationMessage, setVerificationMessage] = useState('');
   const [sendingOtp, setSendingOtp] = useState(false);
   const [verifyingOtp, setVerifyingOtp] = useState(false);
@@ -193,48 +195,59 @@ export default function FirstRunForm() {
                 className="input-base"
               />
             </div>
-            <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
-              <div>
-                <button
-                  type="button"
-                  className="w-full rounded-2xl bg-slate-800 px-4 py-3 text-white transition hover:bg-slate-900 disabled:cursor-not-allowed disabled:opacity-50"
-                  onClick={handleSendVerificationOtp}
-                  disabled={sendingOtp || emailVerified}
-                >
-                  {sendingOtp ? 'Sending code...' : emailVerified ? 'Email verified' : 'Send verification code'}
-                </button>
+            {SKIP_EMAIL_VERIFY ? (
+              <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                Dev mode — email OTP verification skipped. Remove
+                <code className="mx-1 rounded bg-amber-100 px-1 py-0.5 text-xs">SKIP_EMAIL_VERIFY</code>
+                from <code className="mx-1 rounded bg-amber-100 px-1 py-0.5 text-xs">.env.local</code>
+                once SMTP is configured.
               </div>
-              {emailVerified && (
-                <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-                  Email verified successfully.
+            ) : (
+              <>
+                <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
+                  <div>
+                    <button
+                      type="button"
+                      className="w-full rounded-2xl bg-slate-800 px-4 py-3 text-white transition hover:bg-slate-900 disabled:cursor-not-allowed disabled:opacity-50"
+                      onClick={handleSendVerificationOtp}
+                      disabled={sendingOtp || emailVerified}
+                    >
+                      {sendingOtp ? 'Sending code...' : emailVerified ? 'Email verified' : 'Send verification code'}
+                    </button>
+                  </div>
+                  {emailVerified && (
+                    <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                      Email verified successfully.
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-            {verificationMessage && (
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
-                {verificationMessage}
-              </div>
-            )}
-            {!emailVerified && (
-              <div>
-                <label className="mb-2 block text-sm font-medium text-slate-700">Verification Code</label>
-                <div className="flex gap-3">
-                  <input
-                    type="text"
-                    value={verificationCode}
-                    onChange={(e) => setVerificationCode(e.target.value)}
-                    className="input-base flex-1"
-                  />
-                  <button
-                    type="button"
-                    className="rounded-2xl bg-sky-600 px-4 py-3 text-white transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-50"
-                    onClick={handleVerifyEmailOtp}
-                    disabled={verifyingOtp}
-                  >
-                    {verifyingOtp ? 'Verifying...' : 'Verify'}
-                  </button>
-                </div>
-              </div>
+                {verificationMessage && (
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+                    {verificationMessage}
+                  </div>
+                )}
+                {!emailVerified && (
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-slate-700">Verification Code</label>
+                    <div className="flex gap-3">
+                      <input
+                        type="text"
+                        value={verificationCode}
+                        onChange={(e) => setVerificationCode(e.target.value)}
+                        className="input-base flex-1"
+                      />
+                      <button
+                        type="button"
+                        className="rounded-2xl bg-sky-600 px-4 py-3 text-white transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-50"
+                        onClick={handleVerifyEmailOtp}
+                        disabled={verifyingOtp}
+                      >
+                        {verifyingOtp ? 'Verifying...' : 'Verify'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </>
             )}
             <div>
               <label className="mb-2 block text-sm font-medium text-slate-700">Password</label>
