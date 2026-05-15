@@ -14,7 +14,7 @@ export async function GET() {
     patients.map((p) => ({ ...p, _id: String(p._id), id: p.legacyId || String(p._id) }))
   );
 }
-
+console.log("Fetching patients...");
 export async function POST(req) {
   const session = await auth();
   if (!session?.user || (session.user.role !== 'admin' && session.user.role !== 'staff')) {
